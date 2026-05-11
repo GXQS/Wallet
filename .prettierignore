@@ -1,0 +1,7 @@
+LICENSE
+*.lock
+pnpm-lock.yaml
+dist/
+build/
+.next/
+node_modules/

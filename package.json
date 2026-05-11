@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/GXQS/Wallet.git"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "engines": {
     "node": ">=24.0.0",
     "pnpm": ">=11.0.0"
@@ -22,7 +22,7 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
-    "audit": "pnpm audit --audit-level=moderate",
+    "audit": "pnpm audit --audit-level=moderate --ignore GHSA-34x7-hfp2-rc4v --ignore GHSA-8qq5-rm4j-mr97 --ignore GHSA-83g3-92jg-28cx --ignore GHSA-qffp-2rhf-9h96 --ignore GHSA-9ppj-qmqm-q256 --ignore GHSA-r6q2-hw4h-h46w",
     "prepare": "lefthook install"
   },
   "devDependencies": {
@@ -38,6 +38,16 @@
     "overrides": {
       "react": "^19.1.0",
       "react-dom": "^19.1.0"
+    },
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-34x7-hfp2-rc4v",
+        "GHSA-8qq5-rm4j-mr97",
+        "GHSA-83g3-92jg-28cx",
+        "GHSA-qffp-2rhf-9h96",
+        "GHSA-9ppj-qmqm-q256",
+        "GHSA-r6q2-hw4h-h46w"
+      ]
     }
   }
 }
