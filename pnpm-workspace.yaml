@@ -17,7 +17,7 @@ auditConfig:
     - GHSA-r6q2-hw4h-h46w
 minimumReleaseAgeExclude:
   - postcss@8.5.10
-  - '@xmldom/xmldom@0.8.13'
+  - '@xmldom/xmldom@^0.8.13'
 overrides:
   'postcss@<8.5.10': ^8.5.10
   '@xmldom/xmldom@<0.8.13': ^0.8.13
