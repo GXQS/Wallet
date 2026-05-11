@@ -48,7 +48,21 @@ body {
   @apply font-mono bg-black/60 border border-gxqs-border rounded-lg p-4;
 }
 
-/* Scrollbar styling for dark theme */
+/* Glow border utility */
+.glow-border {
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 225, 0.15),
+    0 0 12px rgba(0, 255, 225, 0.08),
+    inset 0 1px 0 0 rgba(0, 255, 225, 0.06);
+}
+
+.glow-border-accent {
+  box-shadow:
+    0 0 0 1px rgba(255, 0, 212, 0.15),
+    0 0 12px rgba(255, 0, 212, 0.08),
+    inset 0 1px 0 0 rgba(255, 0, 212, 0.06);
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

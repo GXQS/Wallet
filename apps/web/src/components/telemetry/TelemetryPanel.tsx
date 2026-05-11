@@ -40,9 +40,23 @@ const TELEMETRY_ROWS: {
   },
 ];
 
+const HEALTH_METRICS: { label: string; value: string; status: 'ok' | 'warn' | 'off' }[] = [
+  { label: 'Block Sync', value: '—', status: 'off' },
+  { label: 'P2P Network', value: '0 peers', status: 'off' },
+  { label: 'Vault', value: 'Locked', status: 'warn' },
+  { label: 'Policy Engine', value: 'Ready', status: 'ok' },
+];
+
+const STATUS_COLOR = {
+  ok: 'text-gxqs-success',
+  warn: 'text-gxqs-warning',
+  off: 'text-gxqs-muted',
+} as const;
+
 export function TelemetryPanel() {
   return (
     <div className="glass rounded-xl p-5">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-mono text-gxqs-muted uppercase tracking-widest">
           Runtime Supervisor
@@ -53,6 +67,22 @@ export function TelemetryPanel() {
             0/5 running
           </span>
         </div>
+      </div>
+
+      {/* System Health cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+        {HEALTH_METRICS.map((m) => (
+          <div
+            key={m.label}
+            className="bg-gxqs-border/20 border border-gxqs-border/40 rounded-lg px-3 py-2"
+          >
+            <div className="text-gxqs-muted text-xs font-mono mb-0.5">{m.label}</div>
+            <div className={`text-xs font-mono font-bold ${STATUS_COLOR[m.status]}`}>
+              {m.status !== 'off' && <span className="mr-1">●</span>}
+              {m.value}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Process table */}
