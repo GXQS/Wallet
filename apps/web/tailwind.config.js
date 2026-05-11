@@ -5,16 +5,16 @@ module.exports = {
     extend: {
       colors: {
         gxqs: {
-          bg: '#060a14',
-          surface: '#0d1424',
-          border: '#1a2540',
-          primary: '#00ffe1', // Exployer teal
+          bg: '#0a0a0f', // deep dark base
+          surface: '#111118', // slightly lighter surface
+          border: '#1e2640',
+          primary: '#00ffe1', // Exployer teal / neon cyan
           secondary: '#7b2fff',
           accent: '#ff00d4', // Exployer magenta
           success: '#00ff94',
           warning: '#ff9500',
           danger: '#ff3b5c',
-          muted: '#4a5568',
+          muted: '#4a5578',
         },
       },
       fontFamily: {
