@@ -1,0 +1,9 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'runtime/protocol/go-rpc-bridge'
+allowBuilds:
+  esbuild: true
+  lefthook: true
+  sharp: true
+  unrs-resolver: true

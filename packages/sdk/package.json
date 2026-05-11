@@ -1,0 +1,28 @@
+{
+  "name": "@gxqs/sdk",
+  "version": "0.1.0",
+  "description": "GXQS Platform SDK – typed RPC interfaces for wallet, mining, validator, and deployment APIs",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.3"
+  }
+}

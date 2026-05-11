@@ -1,0 +1,62 @@
+apiVersion: gxqs.io/v1alpha1
+kind: GXQSPolicy
+metadata:
+  name: enterprise-default
+  namespace: production
+  version: '1.0.0'
+  createdAt: '2026-01-01T00:00:00Z'
+  labels:
+    tier: enterprise
+    managed-by: policy-engine
+  annotations:
+    description: 'Default enterprise policy for GXQS platform deployments'
+
+spec:
+  mining:
+    enabled: true
+    # Limit CPU usage to 50% to avoid thermal throttling during business hours
+    maxCPUPercent: 50
+    # Limit GPU utilisation to 80%
+    maxGPUPercent: 80
+    # Maximum power draw in watts
+    maxPowerWatts: 200
+    # Only compute when the system is idle
+    idleOnly: false
+    # Run compute sessions overnight (2am-6am UTC)
+    allowedSchedule: '0 2-6 * * *'
+
+  validator:
+    enabled: true
+    # Maximum delegated stake in GXQS
+    maxStakeGXQS: 1000000
+    # Commission rate bounds (0.0 – 1.0)
+    minCommissionRate: 0.01
+    maxCommissionRate: 0.20
+    # Require explicit org approval before registering as validator
+    requireApproval: true
+
+  thermal:
+    # Throttle compute if CPU temperature exceeds this threshold
+    maxCPUTempCelsius: 80
+    # Throttle compute if GPU temperature exceeds this threshold
+    maxGPUTempCelsius: 85
+    # Begin throttling when utilisation reaches this percentage
+    throttleAtPercent: 90
+
+  bandwidth:
+    # Maximum upload bandwidth for node communication
+    maxUploadMbps: 100
+    # Maximum download bandwidth
+    maxDownloadMbps: 500
+
+  deploy:
+    # Restrict deployments to approved regions
+    allowedRegions:
+      - us-east-1
+      - us-west-2
+      - eu-west-1
+      - eu-central-1
+    # Require approval before any deployment action
+    requireApproval: true
+    # Maximum number of nodes in an enterprise fleet
+    maxFleetSize: 50

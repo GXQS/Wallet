@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gxqs
+  labels:
+    app.kubernetes.io/part-of: gxqs-platform
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gxqs-config
+  namespace: gxqs
+data:
+  network: mainnet
+  core_rpc_url: 'http://gxqs-core:9090'
+  log_level: info

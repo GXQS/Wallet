@@ -1,0 +1,231 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PNPM_VERSION: '11.0.9'
+  GO_VERSION: '1.24'
+  RUST_TOOLCHAIN: '1.94.1'
+  NODE_VERSION: '24'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # TypeScript: lint · typecheck · audit · test
+  # ---------------------------------------------------------------------------
+  typescript:
+    name: TypeScript (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+      - name: Audit (security)
+        run: pnpm audit --audit-level=moderate
+        continue-on-error: false
+
+  # ---------------------------------------------------------------------------
+  # Go: vet · build · test · staticcheck
+  # ---------------------------------------------------------------------------
+  golang:
+    name: Go (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        module:
+          - runtime/protocol/go-rpc-bridge
+          - runtime/gxqs-runtime
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: '${{ matrix.module }}/go.sum'
+
+      - name: go vet
+        working-directory: ${{ matrix.module }}
+        run: go vet ./...
+
+      - name: go build
+        working-directory: ${{ matrix.module }}
+        run: go build ./...
+
+      - name: go test
+        working-directory: ${{ matrix.module }}
+        run: go test -race -count=1 -timeout=120s ./...
+
+  # ---------------------------------------------------------------------------
+  # Rust: clippy · test · cargo audit
+  # ---------------------------------------------------------------------------
+  rust:
+    name: Rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: clippy, rustfmt
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            runtime/crypto/gxqs-wallet-core-rs/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: cargo clippy
+        working-directory: runtime/crypto/gxqs-wallet-core-rs
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: cargo test
+        working-directory: runtime/crypto/gxqs-wallet-core-rs
+        run: cargo test --all-features
+
+      - name: cargo fmt check
+        working-directory: runtime/crypto/gxqs-wallet-core-rs
+        run: cargo fmt -- --check
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+        env:
+          CARGO_NET_RETRY: '5'
+
+      - name: cargo audit
+        working-directory: runtime/crypto/gxqs-wallet-core-rs
+        run: cargo audit
+
+  # ---------------------------------------------------------------------------
+  # WASM: build gxqs-wallet-core-rs for wasm32-unknown-unknown
+  # ---------------------------------------------------------------------------
+  wasm:
+    name: WASM Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            runtime/crypto/gxqs-wallet-core-rs/target
+          key: wasm-cargo-${{ hashFiles('**/Cargo.toml') }}
+
+      - name: Build WASM
+        working-directory: runtime/crypto/gxqs-wallet-core-rs
+        run: cargo build --target wasm32-unknown-unknown --release --features wasm
+
+  # ---------------------------------------------------------------------------
+  # Format check across all languages
+  # ---------------------------------------------------------------------------
+  format:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prettier check
+        run: pnpm format:check
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: gofmt check
+        run: |
+          gofmt_files=$(gofmt -l runtime/protocol/go-rpc-bridge runtime/gxqs-runtime)
+          if [ -n "$gofmt_files" ]; then
+            echo "Files need gofmt: $gofmt_files"
+            exit 1
+          fi
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: rustfmt
+
+      - name: rustfmt check
+        working-directory: runtime/crypto/gxqs-wallet-core-rs
+        run: cargo fmt -- --check

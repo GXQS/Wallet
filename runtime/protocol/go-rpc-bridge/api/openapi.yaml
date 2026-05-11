@@ -1,0 +1,287 @@
+openapi: '3.1.0'
+info:
+  title: GXQS Wallet RPC API
+  version: '0.1.0'
+  description: |
+    GXQS walletd JSON-RPC API – protocol bridge between GXQS/core and all platform surfaces.
+
+    ## Security
+    - All private key operations are handled by walletd internally.
+    - This API never accepts or returns raw private key material.
+    - All endpoints require an `X-Walletd-Token` header in production deployments.
+
+  contact:
+    name: GXQS Platform Team
+    url: https://github.com/GXQS/Wallet
+
+servers:
+  - url: http://localhost:8545
+    description: Local development walletd
+  - url: https://rpc.gxqs.io
+    description: Production walletd
+
+tags:
+  - name: address
+    description: GXQS address operations
+  - name: transaction
+    description: Transaction construction
+  - name: health
+    description: Health and readiness probes
+
+paths:
+  /healthz:
+    get:
+      tags: [health]
+      summary: Liveness probe
+      operationId: healthz
+      responses:
+        '200':
+          description: Daemon is alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /readyz:
+    get:
+      tags: [health]
+      summary: Readiness probe
+      operationId: readyz
+      responses:
+        '200':
+          description: Daemon is ready to serve traffic
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /rpc/v1/version:
+    get:
+      tags: [health]
+      summary: Version information
+      operationId: getVersion
+      responses:
+        '200':
+          description: Version info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RpcResponse'
+
+  /rpc/v1/address/generate:
+    post:
+      tags: [address]
+      summary: Generate GXQS address from public key
+      operationId: generateAddress
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateAddressRequest'
+      responses:
+        '200':
+          description: Address generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateAddressResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /rpc/v1/address/validate:
+    post:
+      tags: [address]
+      summary: Validate a GXQS address
+      operationId: validateAddress
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateAddressRequest'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateAddressResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /rpc/v1/tx/build:
+    post:
+      tags: [transaction]
+      summary: Build an unsigned transaction
+      operationId: buildTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BuildTransactionRequest'
+      responses:
+        '200':
+          description: Unsigned transaction built
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildTransactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, timestamp]
+      properties:
+        status:
+          type: string
+          enum: [alive, ready]
+        timestamp:
+          type: string
+          format: date-time
+
+    RpcResponse:
+      type: object
+      required: [ok, timestamp]
+      properties:
+        ok:
+          type: boolean
+        data:
+          type: object
+          nullable: true
+        error:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+
+    GenerateAddressRequest:
+      type: object
+      required: [public_key]
+      properties:
+        public_key:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 255
+          description: |
+            Raw public key bytes. Must be 33 bytes (compressed) or 65 bytes (uncompressed).
+
+    GenerateAddressResponse:
+      allOf:
+        - $ref: '#/components/schemas/RpcResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                address:
+                  type: string
+                  description: Bech32-encoded GXQS address
+                  example: gxqs1aabbccddeeff00112233445566778899aabb
+                hex:
+                  type: string
+                  description: 0x-prefixed hex-encoded raw address bytes
+                  example: '0xaabbccddeeff00112233445566778899aabbccdd'
+
+    ValidateAddressRequest:
+      type: object
+      required: [address]
+      properties:
+        address:
+          type: string
+          description: GXQS address string to validate
+          example: gxqs1aabbccddeeff00112233445566778899aabb
+
+    ValidateAddressResponse:
+      allOf:
+        - $ref: '#/components/schemas/RpcResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                valid:
+                  type: boolean
+
+    BuildTransactionRequest:
+      type: object
+      required: [type, from, to, amount, fee, nonce]
+      properties:
+        type:
+          type: string
+          enum: [transfer, stake, unstake, validator_register, deploy]
+        from:
+          type: string
+          description: Sender GXQS address
+        to:
+          type: string
+          description: Recipient GXQS address
+        amount:
+          type: integer
+          format: uint64
+          minimum: 0
+          description: Amount in smallest denomination (aGXQS)
+        fee:
+          type: integer
+          format: uint64
+          minimum: 0
+          description: Transaction fee in aGXQS
+        nonce:
+          type: integer
+          format: uint64
+          minimum: 0
+
+    BuildTransactionResponse:
+      allOf:
+        - $ref: '#/components/schemas/RpcResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                version:
+                  type: integer
+                type:
+                  type: string
+                from:
+                  type: string
+                to:
+                  type: string
+                amount:
+                  type: integer
+                fee:
+                  type: integer
+                nonce:
+                  type: integer
+                timestamp:
+                  type: string
+                  format: date-time
+                hash:
+                  type: string
+                  description: SHA-256 hash of the canonical transaction bytes
+
+  responses:
+    BadRequest:
+      description: Invalid request body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RpcResponse'
+
+    UnprocessableEntity:
+      description: Request body is valid JSON but fails business validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RpcResponse'

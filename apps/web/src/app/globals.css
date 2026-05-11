@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gxqs-primary: #00d4ff;
+  --gxqs-secondary: #7b2fff;
+  --gxqs-accent: #00ff94;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: #060a14;
+}
+
+/* Glass morphism utility */
+.glass {
+  @apply bg-gxqs-surface/60 backdrop-blur-md border border-gxqs-border;
+}
+
+/* Glow text effect */
+.glow-text {
+  text-shadow:
+    0 0 20px var(--gxqs-primary),
+    0 0 40px var(--gxqs-primary);
+}
+
+/* Terminal-style monospace sections */
+.terminal {
+  @apply font-mono bg-black/60 border border-gxqs-border rounded-lg p-4;
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #060a14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a2540;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00d4ff40;
+}

@@ -1,0 +1,13 @@
+pre-commit:
+  commands:
+    lint:
+      run: pnpm lint
+    typecheck:
+      run: pnpm typecheck
+    format-check:
+      run: pnpm format:check
+
+commit-msg:
+  commands:
+    commitlint:
+      run: npx --no-install commitlint --edit {1}

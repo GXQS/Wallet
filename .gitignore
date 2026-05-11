@@ -1,0 +1,92 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.turbo/
+target/
+*.wasm
+*.tsbuildinfo
+
+# Tauri
+src-tauri/target/
+apps/desktop/src-tauri/target/
+
+# Go
+*.exe
+*.test
+*.prof
+coverage.out
+
+# Rust
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Environment
+.env
+.env.local
+.env.production.local
+.env.development.local
+.env.test.local
+
+# Secrets / keys
+*.pem
+*.key
+*.p12
+*.pfx
+vault.json
+keystore.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+lcov.info
+
+# Turborepo cache (remote cache is used in CI)
+.turbo/
+
+# Docker
+.docker/
+
+# Terraform state
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# Generated protobuf
+runtime/protocol/go-rpc-bridge/gen/
+
+# Android / iOS
+apps/mobile/android/.gradle/
+apps/mobile/android/build/
+apps/mobile/ios/build/
+apps/mobile/ios/Pods/
+*.xcworkspace/xcuserdata
+
+# wasm build artifacts  
+*.wasm.gz
