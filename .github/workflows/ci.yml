@@ -73,14 +73,8 @@ jobs:
         # tar@6.x false-positives: GHSA-{34x7,8qq5,83g3,qffp,9ppj,r6q2} target
         # code paths introduced only in tar@7.x — @expo/cli requires ^6.2.1 and
         # is not affected by those advisories.
-        run: |
-          pnpm audit --audit-level=moderate \
-            --ignore GHSA-34x7-hfp2-rc4v \
-            --ignore GHSA-8qq5-rm4j-mr97 \
-            --ignore GHSA-83g3-92jg-28cx \
-            --ignore GHSA-qffp-2rhf-9h96 \
-            --ignore GHSA-9ppj-qmqm-q256 \
-            --ignore GHSA-r6q2-hw4h-h46w
+        # Single-line form avoids PowerShell \ continuation errors on windows-latest.
+        run: pnpm audit --audit-level=moderate --ignore GHSA-34x7-hfp2-rc4v --ignore GHSA-8qq5-rm4j-mr97 --ignore GHSA-83g3-92jg-28cx --ignore GHSA-qffp-2rhf-9h96 --ignore GHSA-9ppj-qmqm-q256 --ignore GHSA-r6q2-hw4h-h46w
         continue-on-error: false
 
   # ---------------------------------------------------------------------------
