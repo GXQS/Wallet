@@ -8,6 +8,10 @@
 //! - All vault operations MUST happen in an isolated process boundary.
 //! - The `SecretKey` type zeroizes its backing memory on `Drop`.
 
+use aes_gcm::{
+    aead::{Aead, KeyInit},
+    Aes256Gcm, Key, Nonce,
+};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -17,8 +21,6 @@ use zeroize::Zeroize;
 const AES_KEY_LEN: usize = 32;
 /// Length of an AES-GCM nonce in bytes.
 const NONCE_LEN: usize = 12;
-/// Length of an AES-GCM authentication tag in bytes.
-const TAG_LEN: usize = 16;
 
 /// A raw 32-byte private key that is zeroized on drop.
 #[derive(Zeroize)]
@@ -52,55 +54,50 @@ impl SecretKey {
     }
 }
 
-/// An encrypted vault entry containing ciphertext + nonce + tag.
+/// An encrypted vault entry containing ciphertext + nonce + GCM tag.
+///
+/// The ciphertext field contains the AEAD ciphertext with the 16-byte
+/// authentication tag appended (as produced by `aes_gcm::Aes256Gcm::encrypt`).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VaultEntry {
-    /// Base64-encoded nonce.
+    /// Base64-encoded 12-byte AES-GCM nonce.
     pub nonce: String,
-    /// Base64-encoded ciphertext + appended GCM tag.
+    /// Base64-encoded AES-256-GCM ciphertext (includes 16-byte auth tag).
     pub ciphertext: String,
-    /// Vault format version.
+    /// Vault format version (2 = AES-256-GCM via RustCrypto `aes-gcm`).
     pub version: u8,
 }
 
 /// Encrypts `plaintext` with a freshly-generated nonce using AES-256-GCM.
 ///
-/// The encryption is performed without an external AES-GCM dependency to keep
-/// this implementation portable and auditable. For a production deployment,
-/// use the `aes-gcm` crate (RustCrypto) which is FIPS-compatible.
-///
-/// **This implementation uses a lightweight XOR-based placeholder cipher.**
-/// Replace with `aes_gcm::Aes256Gcm` before production use.
+/// Each call generates a unique random 96-bit nonce. The authentication tag
+/// produced by AES-GCM is appended to the ciphertext and verified during
+/// [`decrypt`], providing integrity and authenticity guarantees.
 pub fn encrypt(key: &SecretKey, plaintext: &[u8]) -> Result<VaultEntry, VaultError> {
-    let mut nonce = [0u8; NONCE_LEN];
-    rand::thread_rng().fill_bytes(&mut nonce);
+    let mut nonce_bytes = [0u8; NONCE_LEN];
+    rand::thread_rng().fill_bytes(&mut nonce_bytes);
 
-    // Placeholder cipher: XOR with key-derived keystream (NOT AES-GCM).
-    // TODO(security): Replace with aes-gcm crate before production.
-    let mut ciphertext = Vec::with_capacity(plaintext.len() + TAG_LEN);
-    for (i, &byte) in plaintext.iter().enumerate() {
-        ciphertext.push(byte ^ key.as_bytes()[i % AES_KEY_LEN] ^ nonce[i % NONCE_LEN]);
-    }
-    // Append a mock 16-byte authentication tag.
-    let mut tag = [0u8; TAG_LEN];
-    let key_bytes = key.as_bytes();
-    for (i, t) in tag.iter_mut().enumerate() {
-        *t = key_bytes[i] ^ nonce[i % NONCE_LEN];
-    }
-    ciphertext.extend_from_slice(&tag);
+    let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key.as_bytes()));
+    let nonce = Nonce::from_slice(&nonce_bytes);
+
+    let ciphertext = cipher
+        .encrypt(nonce, plaintext)
+        .map_err(|_| VaultError::EncryptionFailed)?;
 
     Ok(VaultEntry {
-        nonce: BASE64.encode(nonce),
+        nonce: BASE64.encode(nonce_bytes),
         ciphertext: BASE64.encode(&ciphertext),
-        version: 1,
+        version: 2,
     })
 }
 
 /// Decrypts a [`VaultEntry`] using the provided key.
 ///
-/// Returns the original plaintext on success.
+/// Verifies the AES-GCM authentication tag before returning plaintext.
+/// Returns [`VaultError::DecryptionFailed`] if the tag is invalid (tampered
+/// ciphertext, wrong key, or corrupted nonce).
 pub fn decrypt(key: &SecretKey, entry: &VaultEntry) -> Result<Vec<u8>, VaultError> {
-    if entry.version != 1 {
+    if entry.version != 2 {
         return Err(VaultError::UnsupportedVersion(entry.version));
     }
 
@@ -111,22 +108,16 @@ pub fn decrypt(key: &SecretKey, entry: &VaultEntry) -> Result<Vec<u8>, VaultErro
         return Err(VaultError::DecodeError);
     }
 
-    let ciphertext_with_tag = BASE64
+    let ciphertext = BASE64
         .decode(&entry.ciphertext)
         .map_err(|_| VaultError::DecodeError)?;
-    if ciphertext_with_tag.len() < TAG_LEN {
-        return Err(VaultError::DecryptionFailed);
-    }
 
-    let ciphertext = &ciphertext_with_tag[..ciphertext_with_tag.len() - TAG_LEN];
+    let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key.as_bytes()));
+    let nonce = Nonce::from_slice(&nonce_bytes);
 
-    // Reverse the XOR placeholder cipher.
-    let mut plaintext = Vec::with_capacity(ciphertext.len());
-    for (i, &byte) in ciphertext.iter().enumerate() {
-        plaintext.push(byte ^ key.as_bytes()[i % AES_KEY_LEN] ^ nonce_bytes[i % NONCE_LEN]);
-    }
-
-    Ok(plaintext)
+    cipher
+        .decrypt(nonce, ciphertext.as_ref())
+        .map_err(|_| VaultError::DecryptionFailed)
 }
 
 /// Errors returned by vault operations.
@@ -138,6 +129,8 @@ pub enum VaultError {
     UnsupportedVersion(u8),
     #[error("base64 decode error")]
     DecodeError,
+    #[error("encryption failed")]
+    EncryptionFailed,
     #[error("decryption failed: authentication tag mismatch")]
     DecryptionFailed,
 }
@@ -163,6 +156,32 @@ mod tests {
         let e2 = encrypt(&key, plaintext).unwrap();
         // Nonces MUST differ (probabilistic; collision probability ≈ 2^-96).
         assert_ne!(e1.nonce, e2.nonce, "nonces should be unique per encryption");
+    }
+
+    #[test]
+    fn test_decrypt_wrong_key_fails() {
+        let key1 = SecretKey::generate();
+        let key2 = SecretKey::generate();
+        let entry = encrypt(&key1, b"secret").unwrap();
+        // AES-GCM tag verification must reject a different key.
+        assert!(
+            matches!(decrypt(&key2, &entry), Err(VaultError::DecryptionFailed)),
+            "decryption with wrong key must fail"
+        );
+    }
+
+    #[test]
+    fn test_decrypt_tampered_ciphertext_fails() {
+        let key = SecretKey::generate();
+        let mut entry = encrypt(&key, b"secret data").unwrap();
+        // Flip a byte in the base64-encoded ciphertext.
+        let mut ct = BASE64.decode(&entry.ciphertext).unwrap();
+        ct[0] ^= 0xff;
+        entry.ciphertext = BASE64.encode(&ct);
+        assert!(
+            matches!(decrypt(&key, &entry), Err(VaultError::DecryptionFailed)),
+            "tampered ciphertext must fail authentication"
+        );
     }
 
     #[test]

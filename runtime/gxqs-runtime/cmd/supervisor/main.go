@@ -65,6 +65,8 @@ func main() {
 	select {
 	case sig := <-quit:
 		slog.Info("received shutdown signal", "signal", sig)
+		// Cancel the context so Run and all supervised daemons terminate cleanly.
+		cancel()
 	case <-ctx.Done():
 		slog.Info("context cancelled")
 	}

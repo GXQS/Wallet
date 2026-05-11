@@ -21,7 +21,10 @@ services:
       WALLETD_LOG_LEVEL: info
       GXQS_CORE_RPC: 'http://core:9090'
     healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://localhost:8545/healthz']
+      # The walletd image is built FROM scratch so no external tools are
+      # available. Use the walletd binary itself as a zero-dependency probe
+      # (it exits 0 on a successful /healthz HTTP GET).
+      test: ['CMD', '/walletd', '-healthcheck']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,7 +45,7 @@ services:
     ports:
       - '3000:3000'
     environment:
-      NEXT_PUBLIC_WALLETD_URL: 'http://localhost:8545'
+      NEXT_PUBLIC_WALLETD_URL: 'http://walletd:8545'
       NODE_ENV: production
     depends_on:
       walletd:

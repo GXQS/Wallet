@@ -62,8 +62,10 @@ export class GxqsClient {
       type: req.type,
       from: req.from,
       to: req.to,
-      amount: Number(req.amount),
-      fee: Number(req.fee),
+      // Encode uint64 fields as decimal strings to avoid JS number precision loss
+      // for values > 2^53 - 1.
+      amount: req.amount.toString(),
+      fee: req.fee.toString(),
       nonce: req.nonce,
     });
   }
@@ -106,9 +108,14 @@ export class GxqsClient {
 
 function hexToBytes(hex: string): Uint8Array {
   const cleaned = hex.startsWith('0x') ? hex.slice(2) : hex;
-  const len = cleaned.length;
-  const arr = new Uint8Array(len / 2);
-  for (let i = 0; i < len; i += 2) {
+  if (cleaned.length % 2 !== 0) {
+    throw new RpcError(`Invalid hex string: odd length (${cleaned.length} chars)`, 0);
+  }
+  if (cleaned.length > 0 && !/^[0-9a-fA-F]+$/.test(cleaned)) {
+    throw new RpcError('Invalid hex string: non-hex characters detected', 0);
+  }
+  const arr = new Uint8Array(cleaned.length / 2);
+  for (let i = 0; i < cleaned.length; i += 2) {
     arr[i / 2] = parseInt(cleaned.slice(i, i + 2), 16);
   }
   return arr;

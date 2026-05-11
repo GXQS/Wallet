@@ -37,7 +37,6 @@ type Supervisor struct {
 	mu      sync.RWMutex
 	daemons map[string]*DaemonState
 	log     *slog.Logger
-	done    chan struct{}
 }
 
 // NewSupervisor creates a new Supervisor instance.
@@ -45,7 +44,6 @@ func NewSupervisor(logger *slog.Logger) *Supervisor {
 	return &Supervisor{
 		daemons: make(map[string]*DaemonState),
 		log:     logger,
-		done:    make(chan struct{}),
 	}
 }
 
@@ -96,18 +94,24 @@ func (s *Supervisor) supervise(ctx context.Context, name string) {
 		default:
 		}
 
-		if state.Spec.RestartMax > 0 && state.Restarts >= state.Spec.RestartMax {
+		// Take a consistent snapshot of Restarts under read lock to avoid
+		// a data race with the write at the end of the loop.
+		s.mu.RLock()
+		restarts := state.Restarts
+		s.mu.RUnlock()
+
+		if state.Spec.RestartMax > 0 && restarts >= state.Spec.RestartMax {
 			s.log.Error("daemon exceeded max restarts, giving up",
-				"name", name, "restarts", state.Restarts)
+				"name", name, "restarts", restarts)
 			s.updateStatus(name, "failed")
 			return
 		}
 
 		// Exponential backoff: 2^restarts seconds, capped at 60 s.
-		if state.Restarts > 0 {
-			backoff := time.Duration(math.Min(math.Pow(2, float64(state.Restarts)), 60)) * time.Second
+		if restarts > 0 {
+			backoff := time.Duration(math.Min(math.Pow(2, float64(restarts)), 60)) * time.Second
 			s.log.Info("daemon restarting with backoff",
-				"name", name, "backoff", backoff, "restarts", state.Restarts)
+				"name", name, "backoff", backoff, "restarts", restarts)
 			select {
 			case <-ctx.Done():
 				return
@@ -215,7 +219,6 @@ func (s *Supervisor) States() []DaemonState {
 	return out
 }
 
-// Shutdown signals the supervisor that no further operations should proceed.
-func (s *Supervisor) Shutdown() {
-	close(s.done)
-}
+// Shutdown is a no-op; callers should cancel the context passed to Run to stop
+// the supervisor and all supervised daemons gracefully.
+func (s *Supervisor) Shutdown() {}

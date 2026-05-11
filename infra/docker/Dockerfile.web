@@ -1,0 +1,67 @@
+# ---------------------------------------------------------------------------
+# GXQS Web Dashboard – multi-stage Dockerfile
+# ---------------------------------------------------------------------------
+
+# Stage 1: Install dependencies
+FROM node:24-alpine AS deps
+RUN corepack enable pnpm
+
+WORKDIR /app
+
+# Copy workspace configuration files
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/sdk/package.json ./packages/sdk/
+COPY packages/ui/package.json ./packages/ui/
+COPY apps/web/package.json ./apps/web/
+
+# Install only production deps + build deps for the web app
+RUN pnpm install --frozen-lockfile
+
+# ---------------------------------------------------------------------------
+# Stage 2: Build
+FROM node:24-alpine AS builder
+RUN corepack enable pnpm
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/sdk/node_modules ./packages/sdk/node_modules
+COPY --from=deps /app/packages/ui/node_modules ./packages/ui/node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+
+# Copy source
+COPY tsconfig.base.json ./
+COPY packages/sdk/ ./packages/sdk/
+COPY packages/ui/ ./packages/ui/
+COPY apps/web/ ./apps/web/
+
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN pnpm --filter @gxqs/web build
+
+# ---------------------------------------------------------------------------
+# Stage 3: Production runner (minimal Node image)
+FROM node:24-alpine AS runner
+RUN corepack enable pnpm
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Run as non-root
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "apps/web/server.js"]

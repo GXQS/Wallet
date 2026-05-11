@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "GXQS",
+    "slug": "gxqs-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#060a14"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gxqs.wallet"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#060a14"
+      },
+      "package": "com.gxqs.wallet"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-router"],
+    "scheme": "gxqs"
+  }
+}

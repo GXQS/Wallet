@@ -1,5 +1,5 @@
 // Package main is the entry point for the GXQS wallet daemon (walletd).
-// walletd exposes a JSON-RPC and gRPC server that provides wallet, signing,
+// walletd exposes a JSON-RPC server that provides wallet, signing,
 // transaction-building, and address-generation services. It forms the
 // protocol-authoritative bridge between GXQS/core and all presentation layers.
 package main
@@ -20,7 +20,28 @@ import (
 	"github.com/gxqs/wallet/runtime/protocol/go-rpc-bridge/pkg/healthcheck"
 )
 
+// version is set at build time via -ldflags "-X main.version=<tag>".
+// Falls back to "dev" when built without explicit version injection.
+var version = "dev"
+
 func main() {
+	// -healthcheck mode: probe the running walletd instance and exit 0 on success.
+	// Used by the Docker HEALTHCHECK instruction in scratch-based images where no
+	// external HTTP tools (wget, curl) are available.
+	if len(os.Args) == 2 && os.Args[1] == "-healthcheck" {
+		cfg, err := config.Load()
+		if err != nil {
+			os.Exit(1)
+		}
+		c := &http.Client{Timeout: 3 * time.Second}
+		resp, err := c.Get(fmt.Sprintf("http://localhost:%d/healthz", cfg.RPCPort))
+		if err != nil || resp.StatusCode != http.StatusOK {
+			os.Exit(1)
+		}
+		resp.Body.Close()
+		os.Exit(0)
+	}
+
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}))
@@ -55,7 +76,7 @@ func main() {
 	}
 
 	go func() {
-		slog.Info("walletd started", "addr", srv.Addr, "version", "0.1.0")
+		slog.Info("walletd started", "addr", srv.Addr, "version", version)
 		if err := srv.Serve(ln); err != nil && err != http.ErrServerClosed {
 			slog.Error("walletd server error", "error", err)
 			cancel()

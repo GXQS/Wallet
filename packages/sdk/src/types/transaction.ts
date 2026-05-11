@@ -21,8 +21,10 @@ export interface Transaction {
   type: TxType;
   from: Address;
   to: Address;
-  amount: number;
-  fee: number;
+  /** Amount in smallest denomination (aGXQS), encoded as decimal string for uint64 safety. */
+  amount: string;
+  /** Transaction fee in aGXQS, encoded as decimal string for uint64 safety. */
+  fee: string;
   nonce: number;
   timestamp: string;
   hash: string;
