@@ -24,7 +24,8 @@ apps/desktop/src-tauri/target/
 coverage.out
 
 # Rust
-Cargo.lock
+# Note: Cargo.lock at workspace roots is committed so that `cargo audit`
+# has exact version information for vulnerability scanning.
 **/*.rs.bk
 *.pdb
 

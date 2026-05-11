@@ -19,6 +19,10 @@ func TestFromPublicKey(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FromPublicKey: unexpected error: %v", err)
 	}
+	// Verify the derived address is non-zero and has the correct byte length.
+	if addr == (address.Address{}) {
+		t.Fatal("expected non-zero address")
+	}
 	if len(addr) != address.AddressLength {
 		t.Fatalf("expected address length %d, got %d", address.AddressLength, len(addr))
 	}
