@@ -183,6 +183,9 @@ mod tests {
         let key = SecretKey::generate();
         let mut entry = encrypt(&key, b"data").unwrap();
         entry.version = 99;
-        assert!(matches!(decrypt(&key, &entry), Err(VaultError::UnsupportedVersion(99))));
+        assert!(matches!(
+            decrypt(&key, &entry),
+            Err(VaultError::UnsupportedVersion(99))
+        ));
     }
 }

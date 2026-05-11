@@ -15,4 +15,3 @@ pub mod vault;
 
 #[cfg(feature = "wasm")]
 pub mod wasm;
-
