@@ -102,6 +102,8 @@ const C = {
   warning: '#ff9500',
   muted: '#4a5568',
   text: '#e2e8f0',
+  // Hex alpha suffixes for semi-transparent tints on #RRGGBB hex colors
+  alpha30: '4d', // ~30% opacity
 } as const;
 
 const styles = StyleSheet.create({
@@ -123,7 +125,7 @@ const styles = StyleSheet.create({
   hashrate: { color: C.accent, fontSize: 40, fontWeight: '700' },
   hashrateUnit: { color: C.muted, fontSize: 15 },
   sparkline: { flexDirection: 'row', alignItems: 'flex-end', height: 28, gap: 2 },
-  sparkBar: { flex: 1, backgroundColor: C.accent + '50', borderRadius: 2 },
+  sparkBar: { flex: 1, backgroundColor: C.accent + C.alpha30, borderRadius: 2 },
   gpuUnit: { marginBottom: 12 },
   gpuHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   gpuId: { color: C.text, fontSize: 12, fontFamily: 'monospace', fontWeight: '700' },

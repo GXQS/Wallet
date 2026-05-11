@@ -69,6 +69,10 @@ const C = {
   success: '#00ff94',
   muted: '#4a5568',
   text: '#e2e8f0',
+  // Hex alpha suffixes for semi-transparent tints on #RRGGBB hex colors
+  alpha10: '18', // ~10% opacity
+  alpha30: '4d', // ~30% opacity
+  alpha25: '40', // ~25% opacity
 } as const;
 
 const styles = StyleSheet.create({
@@ -78,7 +82,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: C.primary + '40',
+    borderColor: C.primary + C.alpha25,
     padding: 20,
     marginBottom: 12,
     shadowColor: C.primary,
@@ -121,8 +125,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
   },
-  actionBtnPrimary: { backgroundColor: C.primary + '18', borderColor: C.primary + '50' },
+  actionBtnPrimary: { backgroundColor: C.primary + C.alpha10, borderColor: C.primary + C.alpha30 },
   actionBtnPrimaryText: { color: C.primary, fontWeight: '700', fontSize: 14 },
-  actionBtnSecondary: { backgroundColor: C.accent + '18', borderColor: C.accent + '50' },
+  actionBtnSecondary: { backgroundColor: C.accent + C.alpha10, borderColor: C.accent + C.alpha30 },
   actionBtnSecondaryText: { color: C.accent, fontWeight: '700', fontSize: 14 },
 });

@@ -78,7 +78,7 @@ export function TelemetryPanel() {
           >
             <div className="text-gxqs-muted text-xs font-mono mb-0.5">{m.label}</div>
             <div className={`text-xs font-mono font-bold ${STATUS_COLOR[m.status]}`}>
-              {m.status !== 'off' && <span className="mr-1">●</span>}
+              <span className="mr-1">●</span>
               {m.value}
             </div>
           </div>
