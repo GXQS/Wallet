@@ -10,6 +10,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Minimal default permissions – individual jobs escalate only what they need.
+permissions:
+  contents: read
+
 env:
   PNPM_VERSION: '11.0.9'
   GO_VERSION: '1.24'
@@ -70,11 +74,13 @@ jobs:
         continue-on-error: false
 
   # ---------------------------------------------------------------------------
-  # Go: vet · build · test · staticcheck
+  # Go: vet · build · test (race+short) · govulncheck · golangci-lint
   # ---------------------------------------------------------------------------
   golang:
-    name: Go (${{ matrix.os }})
+    name: Go ${{ matrix.module }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -82,6 +88,7 @@ jobs:
         module:
           - runtime/protocol/go-rpc-bridge
           - runtime/gxqs-runtime
+          - runtime/policy-engine
     steps:
       - uses: actions/checkout@v4
 
@@ -99,9 +106,23 @@ jobs:
         working-directory: ${{ matrix.module }}
         run: go build ./...
 
-      - name: go test
+      - name: go test (race + short)
         working-directory: ${{ matrix.module }}
-        run: go test -race -count=1 -timeout=120s ./...
+        run: go test -race -short -count=1 -timeout=120s ./...
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: govulncheck
+        working-directory: ${{ matrix.module }}
+        run: govulncheck ./...
+
+      - name: golangci-lint
+        if: matrix.os == 'ubuntu-latest'
+        uses: golangci/golangci-lint-action@v6
+        with:
+          working-directory: ${{ matrix.module }}
+          version: latest
 
   # ---------------------------------------------------------------------------
   # Rust: clippy · test · cargo audit
@@ -214,7 +235,7 @@ jobs:
 
       - name: gofmt check
         run: |
-          gofmt_files=$(gofmt -l runtime/protocol/go-rpc-bridge runtime/gxqs-runtime)
+          gofmt_files=$(gofmt -l runtime/protocol/go-rpc-bridge runtime/gxqs-runtime runtime/policy-engine)
           if [ -n "$gofmt_files" ]; then
             echo "Files need gofmt: $gofmt_files"
             exit 1
@@ -229,3 +250,22 @@ jobs:
       - name: rustfmt check
         working-directory: runtime/crypto/gxqs-wallet-core-rs
         run: cargo fmt -- --check
+
+  # ---------------------------------------------------------------------------
+  # SBOM: generate software bill of materials (main branch pushes only)
+  # ---------------------------------------------------------------------------
+  sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate SBOM (SPDX)
+        uses: anchore/sbom-action@v0
+        with:
+          artifact-name: gxqs-platform-sbom.spdx.json
+          output-file: sbom.spdx.json
+          upload-artifact: true

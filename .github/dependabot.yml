@@ -1,0 +1,73 @@
+version: 2
+updates:
+  # ── GitHub Actions ────────────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "github-actions"]
+    commit-message:
+      prefix: "ci"
+
+  # ── npm / pnpm (root + all workspaces) ────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "javascript"]
+    commit-message:
+      prefix: "chore"
+    groups:
+      react:
+        patterns: ["react", "react-dom", "@types/react*"]
+      tailwind:
+        patterns: ["tailwindcss", "@tailwindcss/*", "postcss", "autoprefixer"]
+      nextjs:
+        patterns: ["next", "@next/*"]
+      testing:
+        patterns: ["jest", "@jest/*", "@testing-library/*", "ts-jest"]
+      eslint:
+        patterns: ["eslint*", "@eslint/*", "@typescript-eslint/*"]
+
+  # ── Go: rpc-bridge ────────────────────────────────────────────────────────
+  - package-ecosystem: "gomod"
+    directory: "/runtime/protocol/go-rpc-bridge"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "golang"]
+    commit-message:
+      prefix: "chore(go-rpc-bridge)"
+
+  # ── Go: gxqs-runtime ─────────────────────────────────────────────────────
+  - package-ecosystem: "gomod"
+    directory: "/runtime/gxqs-runtime"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "golang"]
+    commit-message:
+      prefix: "chore(gxqs-runtime)"
+
+  # ── Go: policy-engine ────────────────────────────────────────────────────
+  - package-ecosystem: "gomod"
+    directory: "/runtime/policy-engine"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "golang"]
+    commit-message:
+      prefix: "chore(policy-engine)"
+
+  # ── Rust / Cargo ──────────────────────────────────────────────────────────
+  - package-ecosystem: "cargo"
+    directory: "/runtime/crypto"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "rust"]
+    commit-message:
+      prefix: "chore(crypto)"
+    groups:
+      crypto-primitives:
+        patterns: ["sha2", "ripemd", "zeroize", "rand", "getrandom", "base64", "hex*"]
+      serde:
+        patterns: ["serde", "serde_json"]
+      wasm:
+        patterns: ["wasm-bindgen", "js-sys"]
