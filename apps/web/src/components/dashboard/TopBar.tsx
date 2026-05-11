@@ -12,11 +12,13 @@ export function TopBar() {
     >
       <div className="flex items-center gap-4">
         {/* Logo mark */}
-        <span className="text-gxqs-primary font-mono font-bold text-base tracking-[0.2em] glow-text">
-          GXQS
+        <span className="text-gxqs-primary font-mono font-bold text-base tracking-[0.1em] glow-text">
+          GXQS Runtime Platform
         </span>
         <span className="text-gxqs-border text-xs hidden md:block">│</span>
-        <span className="hidden md:block text-white/60 text-xs font-mono">Runtime Platform</span>
+        <span className="hidden md:block text-white/60 text-xs font-mono">
+          Distributed Control Plane
+        </span>
         {/* Mainnet pill */}
         <span className="hidden sm:inline-flex items-center gap-1.5 bg-gxqs-success/10 border border-gxqs-success/20 rounded-full px-2.5 py-0.5 text-gxqs-success text-xs font-mono">
           <span className="w-1.5 h-1.5 rounded-full bg-gxqs-success animate-pulse inline-block" />

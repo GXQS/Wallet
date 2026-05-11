@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD matrix (Ubuntu × Windows × macOS) with Dependabot auto-merge aligned with GXQS/core & Exployer
 - Docker multi-stage builds + Kubernetes Kustomize manifests
 - OpenAPI spec for walletd covering address, transaction, and health endpoints
+- Smart wallet onboarding panel for frontend-only flow:
+  - one-click wallet generation with secure browser entropy
+  - email confirmation + Google login UI state placeholders
+  - seed phrase / private key / keystore import path
+  - testnet/mainnet toggle + RPC profile configuration
+  - wallet export actions (seed/key/JSON keystore)
+- Typed integration bridge placeholders for future `core.git` wallet daemon sync and `Exployer.git` explorer sync
+- Cyber-futuristic dashboard enhancements: GPU overview, network topology, mining chart, and system health refinements
 
 ### Security
 
@@ -35,6 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory zeroization on drop (`zeroize` crate) for all `SecretKey` instances
 - CSP + `X-Frame-Options: DENY` + `X-Content-Type-Options` headers on all web routes
 - `readOnlyRootFilesystem` + non-root `seccompProfile` in Kubernetes manifests
+
+### Fixed
+
+- Prettier blocker in `apps/web/next-env.d.ts` to keep `pnpm format:check` green across CI
+- Removed stale frontend runtime state (`walletdConnected`) to reduce dead code in the web store
 
 **Initial Release** — Strong foundation for production use. Private key operations are isolated
 to `walletd`; all other platform processes (mining, telemetry, UI) operate with no vault access.
