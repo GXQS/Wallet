@@ -137,7 +137,7 @@ jobs:
 
       - name: golangci-lint
         if: matrix.os == 'ubuntu-latest'
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
           working-directory: ${{ matrix.module }}
           version: latest
