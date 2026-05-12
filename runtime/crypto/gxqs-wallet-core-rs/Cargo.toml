@@ -14,11 +14,11 @@ default = []
 wasm = ["wasm-bindgen", "js-sys", "getrandom/js"]
 
 [dependencies]
-sha2 = "0.10"
-ripemd = "0.1"
+sha2 = "0.11"
+ripemd = "0.2"
 hex = "0.4"
 zeroize = { version = "1.8", features = ["derive"] }
-rand = "0.8"
+rand = "0.8.6"
 getrandom = { version = "0.2", optional = true }
 serde = { version = "1", features = ["derive"] }
 aes-gcm = "0.10"
@@ -29,7 +29,7 @@ wasm-bindgen = { version = "0.2", optional = true }
 js-sys = { version = "0.3", optional = true }
 
 [dev-dependencies]
-hex-literal = "0.4"
+hex-literal = "1.1"
 
 [profile.release]
 opt-level = 3
