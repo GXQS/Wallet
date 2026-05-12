@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+dist/
+build/
+*.tsbuildinfo
+ios/build/
+android/build/
+android/.gradle/
+ios/Pods/
+*.xcworkspace/xcuserdata/

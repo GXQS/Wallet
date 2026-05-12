@@ -1,0 +1,7 @@
+go 1.24.13
+
+use (
+	./runtime/gxqs-runtime
+	./runtime/policy-engine
+	./runtime/protocol/go-rpc-bridge
+)

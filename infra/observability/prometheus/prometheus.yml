@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: gxqs-platform
+    environment: development
+
+scrape_configs:
+  - job_name: walletd
+    static_configs:
+      - targets: ['walletd:8545']
+    metrics_path: /metrics
+    scheme: http
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']

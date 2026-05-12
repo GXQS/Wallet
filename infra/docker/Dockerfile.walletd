@@ -1,0 +1,39 @@
+# ---------------------------------------------------------------------------
+# GXQS walletd – production-grade multi-stage Dockerfile
+# ---------------------------------------------------------------------------
+# Stage 1: Build the walletd binary
+FROM golang:1.24-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata
+
+WORKDIR /build
+
+# Cache module downloads separately from source
+COPY runtime/protocol/go-rpc-bridge/go.mod runtime/protocol/go-rpc-bridge/go.sum ./
+RUN go mod download
+
+# Copy source and build a statically-linked binary
+COPY runtime/protocol/go-rpc-bridge/ ./
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-s -w -X main.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev)" \
+    -trimpath \
+    -o /bin/walletd \
+    ./cmd/walletd
+
+# ---------------------------------------------------------------------------
+# Stage 2: Minimal production image
+FROM scratch
+
+# Import CA certificates and timezone data from the builder stage
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=builder /bin/walletd /walletd
+
+# Run as non-root user (UID 65534 = nobody)
+USER 65534
+
+# walletd JSON-RPC port
+EXPOSE 8545
+
+ENTRYPOINT ["/walletd"]

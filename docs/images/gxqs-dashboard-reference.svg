@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#080A12"/>
+      <stop offset="1" stop-color="#101322"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#122135" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#0E192B" stop-opacity="0.88"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect x="26" y="24" width="1228" height="70" rx="14" fill="#0F172A" fill-opacity="0.92" stroke="#1E2640"/>
+  <text x="52" y="67" fill="#00FFE1" font-size="24" font-family="monospace">GXQS Runtime Platform</text>
+  <g stroke="#1E2640">
+    <rect x="26" y="114" width="240" height="136" rx="14" fill="url(#card)"/>
+    <rect x="280" y="114" width="240" height="136" rx="14" fill="url(#card)"/>
+    <rect x="534" y="114" width="240" height="136" rx="14" fill="url(#card)"/>
+    <rect x="788" y="114" width="240" height="136" rx="14" fill="url(#card)"/>
+    <rect x="1042" y="114" width="212" height="136" rx="14" fill="url(#card)"/>
+    <rect x="26" y="268" width="404" height="206" rx="14" fill="url(#card)"/>
+    <rect x="444" y="268" width="404" height="206" rx="14" fill="url(#card)"/>
+    <rect x="862" y="268" width="392" height="206" rx="14" fill="url(#card)"/>
+    <rect x="26" y="492" width="1228" height="202" rx="14" fill="url(#card)"/>
+  </g>
+  <text x="52" y="153" fill="#A0AEC0" font-size="14" font-family="monospace">Reference dashboard silhouette for v0.1.0 docs.</text>
+  <text x="52" y="178" fill="#00FFE1" font-size="18" font-family="monospace">Glassmorphism • Neon #00ffe1 / #ff00d4 • Responsive PWA layout</text>
+  <circle cx="1220" cy="58" r="5" fill="#00FFE1"/>
+  <circle cx="1238" cy="58" r="5" fill="#FF00D4"/>
+</svg>

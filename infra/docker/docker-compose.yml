@@ -1,0 +1,106 @@
+version: '3.9'
+
+# ---------------------------------------------------------------------------
+# GXQS Platform – Docker Compose development stack
+# ---------------------------------------------------------------------------
+
+services:
+  # ---- Protocol Layer ----
+  walletd:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.walletd
+    image: gxqs/walletd:dev
+    container_name: gxqs-walletd
+    restart: unless-stopped
+    ports:
+      - '8545:8545'
+    environment:
+      WALLETD_RPC_PORT: '8545'
+      GXQS_NETWORK: mainnet
+      WALLETD_LOG_LEVEL: info
+      GXQS_CORE_RPC: 'http://core:9090'
+    healthcheck:
+      # The walletd image is built FROM scratch so no external tools are
+      # available. Use the walletd binary itself as a zero-dependency probe
+      # (it exits 0 on a successful /healthz HTTP GET).
+      test: ['CMD', '/walletd', '-healthcheck']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gxqs-internal
+    volumes:
+      - walletd-vault:/data/vault
+
+  # ---- Web Dashboard ----
+  web:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.web
+    image: gxqs/web:dev
+    container_name: gxqs-web
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NEXT_PUBLIC_WALLETD_URL: 'http://walletd:8545'
+      NODE_ENV: production
+    depends_on:
+      walletd:
+        condition: service_healthy
+    networks:
+      - gxqs-internal
+      - gxqs-public
+
+  # ---- Observability ----
+  prometheus:
+    image: prom/prometheus:v3.4.0
+    container_name: gxqs-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - '9090:9090'
+    networks:
+      - gxqs-internal
+
+  grafana:
+    image: grafana/grafana:12.0.0
+    container_name: gxqs-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: '${GRAFANA_PASSWORD:-changeme}'
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - '3001:3000'
+    depends_on:
+      - prometheus
+    networks:
+      - gxqs-internal
+
+networks:
+  gxqs-internal:
+    driver: bridge
+    internal: true
+  gxqs-public:
+    driver: bridge
+
+volumes:
+  walletd-vault:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
