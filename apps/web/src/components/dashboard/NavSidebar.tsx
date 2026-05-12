@@ -1,13 +1,11 @@
 'use client';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/', icon: '⬡' },
-  { label: 'Wallet', href: '/wallet', icon: '◈' },
-  { label: 'Mining', href: '/mining', icon: '⚡' },
-  { label: 'Validator', href: '/validator', icon: '◉' },
-  { label: 'Deploy', href: '/deploy', icon: '▲' },
-  { label: 'Fleet', href: '/fleet', icon: '⬡' },
-  { label: 'Settings', href: '/settings', icon: '⚙' },
+  { label: 'Overview', href: '#overview', icon: '⬡' },
+  { label: 'Wallet', href: '#wallet', icon: '◈' },
+  { label: 'Mining', href: '#mining', icon: '⚡' },
+  { label: 'Validator', href: '#validator', icon: '◉' },
+  { label: 'Health', href: '#health', icon: '▲' },
 ] as const;
 
 export function NavSidebar() {

@@ -9,6 +9,10 @@ GXQS is **not** a wallet app. It is an enterprise blockchain operating platform 
 - 🦀 **Rust Crypto Core** – AES-256-GCM vault, memory-safe (zeroize-on-drop), WASM-capable
 - 🐹 **Go Protocol Bridge** – walletd JSON-RPC server, GXQS address derivation, transaction builder
 - 🌐 **Web Dashboard** – Next.js + Tailwind + Zustand enterprise monitoring UI (`#00ffe1` glow system)
+- 🧠 **Smart Wallet Flow (walletd-mediated placeholders)**:
+  - one-click onboarding UX and registration/import/export request surfaces
+  - network/RPC profile toggles and auth onboarding placeholders
+  - secret material remains inside `walletd`
 - 📱 **Mobile App** – React Native + Expo cross-platform client (`apps/mobile`)
 - 📋 **Policy Engine** – YAML-driven enterprise policy enforcement (compute limits, validator rules, fleet policies)
 - 🐳 **Production Infrastructure** – Docker, Kubernetes (Kustomize), Prometheus, Grafana
@@ -20,6 +24,7 @@ GXQS is **not** a wallet app. It is an enterprise blockchain operating platform 
 ```mermaid
 graph TD
     CORE["GXQS/core\n(Protocol Authority)"]
+    EXP["GXQS/Exployer\n(Explorer + Contracts Indexer)"]
 
     subgraph Wallet["GXQS/Wallet — Control Plane"]
         WD["walletd\n(Go JSON-RPC bridge)\n• Address derivation\n• Tx builder / signer\n• Vault gateway"]
@@ -40,6 +45,8 @@ graph TD
     SUP -->|spawn / health-check| WD
     PE -->|policy enforcement| SUP
     WEB -->|RPC over HTTP| WD
+    WEB -->|index + contract sync hooks| EXP
+    EXP -->|network analytics + contract state| WEB
     DESK -->|RPC over IPC| WD
     MOB -->|RPC over HTTP| WD
     BROWSER -->|WASM| VAULT
@@ -116,13 +123,23 @@ pnpm install
 # 2 — Start web dashboard (dev)
 pnpm --filter @gxqs/web dev
 
-# 3 — Run walletd (Go)
+# 3 — Validate frontend quality gates
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test
+
+# 4 — Run walletd (Go)
 cd runtime/protocol/go-rpc-bridge && go run ./cmd/walletd
 
-# 4 — Verify
+# 5 — Verify
 curl http://localhost:8545/healthz
 curl http://localhost:8545/rpc/v1/version
 ```
+
+### Dashboard screenshot
+
+![GXQS Runtime Platform Dashboard](docs/images/gxqs-dashboard-reference.svg)
 
 ### Full stack (Docker Compose)
 
@@ -187,4 +204,4 @@ CI runs on **Ubuntu**, **Windows**, and **macOS** for all language stacks.
 
 ## License
 
-MIT © GXQS Platform Team
+Apache-2.0 © GXQS Platform Team
