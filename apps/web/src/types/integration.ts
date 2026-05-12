@@ -13,6 +13,27 @@ export interface WalletRegistrationResult {
   queuedAt: string;
 }
 
+export interface WalletProvisioningPayload {
+  network: PlatformNetwork;
+  rpcUrl: string;
+}
+
+export interface WalletProvisioningResult {
+  walletAddress: string;
+  source: 'walletd-placeholder';
+}
+
+export interface WalletImportPayload {
+  mode: 'seed' | 'private' | 'keystore';
+  secureSessionId: string;
+  network: PlatformNetwork;
+}
+
+export interface WalletImportResult {
+  walletAddress: string;
+  status: 'queued' | 'imported';
+}
+
 export interface CoreWalletDaemonSyncPayload {
   network: PlatformNetwork;
   rpcUrl: string;
@@ -41,6 +62,8 @@ export interface ExployerSyncResult {
 }
 
 export interface CoreWalletDaemonBridge {
+  requestWalletProvisioning(payload: WalletProvisioningPayload): Promise<WalletProvisioningResult>;
+  requestWalletImport(payload: WalletImportPayload): Promise<WalletImportResult>;
   registerWallet(payload: WalletRegistrationPayload): Promise<WalletRegistrationResult>;
   syncWallet(payload: CoreWalletDaemonSyncPayload): Promise<CoreWalletDaemonSyncResult>;
 }

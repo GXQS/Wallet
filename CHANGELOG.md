@@ -27,12 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD matrix (Ubuntu × Windows × macOS) with Dependabot auto-merge aligned with GXQS/core & Exployer
 - Docker multi-stage builds + Kubernetes Kustomize manifests
 - OpenAPI spec for walletd covering address, transaction, and health endpoints
-- Smart wallet onboarding panel for frontend-only flow:
-  - one-click wallet generation with secure browser entropy
+- Smart wallet onboarding panel for walletd-mediated placeholder flow:
+  - one-click wallet provisioning request UI (walletd generates key material)
   - email confirmation + Google login UI state placeholders
-  - seed phrase / private key / keystore import path
+  - seed phrase / private key / keystore import request via opaque walletd session identifiers
   - testnet/mainnet toggle + RPC profile configuration
-  - wallet export actions (seed/key/JSON keystore)
+  - wallet export actions for public metadata only
 - Typed integration bridge placeholders for future `core.git` wallet daemon sync and `Exployer.git` explorer sync
 - Cyber-futuristic dashboard enhancements: GPU overview, network topology, mining chart, and system health refinements
 

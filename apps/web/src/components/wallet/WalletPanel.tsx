@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useIntegrationBridges } from '@/hooks/useIntegrationBridges';
-import { deriveAddress, generateWalletMaterial } from '@/lib/wallet';
 import type { PlatformNetwork } from '@/types/integration';
 
 type ImportMode = 'seed' | 'private' | 'keystore';
@@ -22,10 +21,9 @@ export function WalletPanel() {
   const [isEmailConfirmed, setIsEmailConfirmed] = useState(false);
   const [googleLinked, setGoogleLinked] = useState(false);
   const [address, setAddress] = useState('');
-  const [mnemonic, setMnemonic] = useState('');
-  const [privateKeyHex, setPrivateKeyHex] = useState('');
   const [importMode, setImportMode] = useState<ImportMode>('seed');
-  const [importValue, setImportValue] = useState('');
+  const [secureSessionId, setSecureSessionId] = useState('');
+  const [clipboardFallback, setClipboardFallback] = useState('');
   const [status, setStatus] = useState('Wallet not registered');
 
   const handleNetworkChange = (next: PlatformNetwork) => {
@@ -34,12 +32,10 @@ export function WalletPanel() {
   };
 
   const handleCreateWallet = async () => {
-    const wallet = await generateWalletMaterial(network);
-    setMnemonic(wallet.mnemonic);
-    setPrivateKeyHex(wallet.privateKeyHex);
-    setAddress(wallet.address);
+    const provisioned = await coreBridge.requestWalletProvisioning({ network, rpcUrl });
+    setAddress(provisioned.walletAddress);
     const registration = await coreBridge.registerWallet({
-      address: wallet.address,
+      address: provisioned.walletAddress,
       network,
       authProvider,
       contact: authProvider === 'email' ? email || 'unconfirmed@email' : 'google-oauth',
@@ -47,44 +43,59 @@ export function WalletPanel() {
     await coreBridge.syncWallet({
       network,
       rpcUrl,
-      walletAddress: wallet.address,
+      walletAddress: provisioned.walletAddress,
     });
     await exployerBridge.syncWalletData({
       network,
-      walletAddress: wallet.address,
+      walletAddress: provisioned.walletAddress,
     });
     setStatus(`Registered ${registration.walletId} (${registration.status})`);
   };
 
   const handleImportWallet = async () => {
-    if (!importValue.trim()) {
-      setStatus('Paste seed phrase/private key/keystore to import');
+    if (!secureSessionId.trim()) {
+      setStatus('Enter secure walletd import session ID');
       return;
     }
-    const nextAddress = await deriveAddress(`${importMode}:${importValue.trim()}`, network);
-    setAddress(nextAddress);
-    setStatus(`Imported wallet from ${importMode} (${network})`);
+    const imported = await coreBridge.requestWalletImport({
+      mode: importMode,
+      secureSessionId: secureSessionId.trim(),
+      network,
+    });
+    setAddress(imported.walletAddress);
+    setStatus(`Import requested via walletd (${importMode}, ${imported.status})`);
   };
 
-  const handleExport = async (mode: 'mnemonic' | 'private' | 'keystore') => {
-    const payload =
-      mode === 'mnemonic'
-        ? mnemonic
-        : mode === 'private'
-          ? privateKeyHex
-          : JSON.stringify(
-              { address, network, rpcUrl, exportedAt: new Date().toISOString() },
-              null,
-              2,
-            );
+  const handleExport = async (mode: 'profile' | 'address' | 'ticket') => {
+    const payload = JSON.stringify(
+      {
+        mode,
+        address,
+        network,
+        rpcUrl,
+        exportedAt: new Date().toISOString(),
+        note: 'Public metadata only. Secret material is walletd-managed.',
+      },
+      null,
+      2,
+    );
 
-    if (!payload) {
-      setStatus('Create or import a wallet before exporting');
+    if (!address) {
+      setStatus('Create or import a wallet before exporting metadata');
       return;
     }
 
-    await globalThis.navigator.clipboard.writeText(payload);
-    setStatus(`${mode} copied to clipboard`);
+    try {
+      if (!globalThis.navigator.clipboard?.writeText) {
+        throw new Error('Clipboard API unavailable');
+      }
+      await globalThis.navigator.clipboard.writeText(payload);
+      setClipboardFallback('');
+      setStatus(`${mode} metadata copied to clipboard`);
+    } catch {
+      setClipboardFallback(payload);
+      setStatus('Clipboard unavailable. Copy from the fallback field below.');
+    }
   };
 
   return (
@@ -206,11 +217,10 @@ export function WalletPanel() {
           </button>
         ))}
       </div>
-      <textarea
-        value={importValue}
-        onChange={(event) => setImportValue(event.target.value)}
-        rows={3}
-        placeholder="Import seed phrase / private key / keystore JSON"
+      <input
+        value={secureSessionId}
+        onChange={(event) => setSecureSessionId(event.target.value)}
+        placeholder="Secure walletd import session ID (opaque token)"
         className="w-full rounded-md border border-gxqs-border bg-black/30 px-2 py-1.5 text-xs text-white"
       />
       <button
@@ -224,36 +234,42 @@ export function WalletPanel() {
       <div className="grid grid-cols-3 gap-2">
         <button
           type="button"
-          onClick={() => handleExport('mnemonic')}
+          onClick={() => handleExport('profile')}
           className="rounded-md border border-gxqs-border px-2 py-1.5 text-[11px] font-mono text-gxqs-muted hover:text-white"
         >
-          Export Seed
+          Export Profile
         </button>
         <button
           type="button"
-          onClick={() => handleExport('private')}
+          onClick={() => handleExport('address')}
           className="rounded-md border border-gxqs-border px-2 py-1.5 text-[11px] font-mono text-gxqs-muted hover:text-white"
         >
-          Export Key
+          Export Address
         </button>
         <button
           type="button"
-          onClick={() => handleExport('keystore')}
+          onClick={() => handleExport('ticket')}
           className="rounded-md border border-gxqs-border px-2 py-1.5 text-[11px] font-mono text-gxqs-muted hover:text-white"
         >
-          Export JSON
+          Export Ticket
         </button>
       </div>
 
       <div className="terminal text-xs space-y-1">
         <div className="text-gxqs-muted">Address: {address || '—'}</div>
-        <div className="text-gxqs-muted truncate">
-          Mnemonic: {mnemonic ? `${mnemonic.split(' ').slice(0, 4).join(' ')} ...` : '—'}
-        </div>
-        <div className="text-gxqs-muted truncate">
-          Private Key: {privateKeyHex ? `${privateKeyHex.slice(0, 12)}...` : '—'}
+        <div className="text-gxqs-muted">
+          Security: <span className="text-gxqs-success">Private keys remain walletd-scoped</span>
         </div>
       </div>
+
+      {clipboardFallback && (
+        <textarea
+          readOnly
+          value={clipboardFallback}
+          rows={4}
+          className="w-full rounded-md border border-gxqs-warning/40 bg-black/30 px-2 py-1.5 text-xs text-white"
+        />
+      )}
 
       <div className="text-xs font-mono text-gxqs-muted">
         Status: <span className="text-gxqs-primary">{status}</span>

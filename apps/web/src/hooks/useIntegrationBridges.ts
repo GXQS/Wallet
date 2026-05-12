@@ -8,6 +8,10 @@ import type {
   ExployerBridge,
   ExployerSyncPayload,
   ExployerSyncResult,
+  WalletImportPayload,
+  WalletImportResult,
+  WalletProvisioningPayload,
+  WalletProvisioningResult,
   WalletRegistrationPayload,
   WalletRegistrationResult,
 } from '@/types/integration';
@@ -26,6 +30,31 @@ async function registerWallet(
     walletId: `${payload.network}-${payload.address.slice(0, 8)}`,
     status: 'queued',
     queuedAt: new Date().toISOString(),
+  };
+}
+
+async function requestWalletProvisioning(
+  payload: WalletProvisioningPayload,
+): Promise<WalletProvisioningResult> {
+  // Placeholder only. In production, walletd creates key material and returns
+  // a canonical public address; UI never handles secrets.
+  await wait(120);
+  const networkPrefix = payload.network === 'mainnet' ? 'gxqs1' : 'tgxqs1';
+  const rpcHint = payload.rpcUrl.startsWith('http') ? 'rpc' : 'offline';
+  return {
+    walletAddress: `${networkPrefix}walletd-${rpcHint}-pending`,
+    source: 'walletd-placeholder',
+  };
+}
+
+async function requestWalletImport(payload: WalletImportPayload): Promise<WalletImportResult> {
+  // Placeholder only. UI submits an opaque secure-session identifier to walletd.
+  // Sensitive seed/private-key/keystore content must stay in walletd process scope.
+  await wait(120);
+  const networkPrefix = payload.network === 'mainnet' ? 'gxqs1' : 'tgxqs1';
+  return {
+    walletAddress: `${networkPrefix}import-${payload.mode}-${payload.secureSessionId.slice(0, 6)}`,
+    status: 'queued',
   };
 }
 
@@ -52,8 +81,8 @@ async function syncWalletData(payload: ExployerSyncPayload): Promise<ExployerSyn
   // 2) explorer streams balances/contracts/tx timelines back to UI
   await wait(120);
   return {
-    status: 'pending',
-    indexedContracts: payload.walletAddress ? 0 : 0,
+    status: payload.network === 'mainnet' ? 'ready' : 'pending',
+    indexedContracts: 0,
     indexedAt: new Date().toISOString(),
   };
 }
@@ -64,6 +93,8 @@ export function useIntegrationBridges(): {
 } {
   const coreBridge = useMemo<CoreWalletDaemonBridge>(
     () => ({
+      requestWalletProvisioning,
+      requestWalletImport,
       registerWallet,
       syncWallet,
     }),
