@@ -9,7 +9,10 @@ GXQS is **not** a wallet app. It is an enterprise blockchain operating platform 
 - 🦀 **Rust Crypto Core** – AES-256-GCM vault, memory-safe (zeroize-on-drop), WASM-capable
 - 🐹 **Go Protocol Bridge** – walletd JSON-RPC server, GXQS address derivation, transaction builder
 - 🌐 **Web Dashboard** – Next.js + Tailwind + Zustand enterprise monitoring UI (`#00ffe1` glow system)
-- 🧠 **Smart Wallet Flow (walletd-mediated placeholders)** – one-click onboarding UX, registration/import/export request surfaces, network/RPC profile toggles, auth onboarding placeholders; secret material remains in `walletd`
+- 🧠 **Smart Wallet Flow (walletd-mediated placeholders)**:
+  - one-click onboarding UX and registration/import/export request surfaces
+  - network/RPC profile toggles and auth onboarding placeholders
+  - secret material remains inside `walletd`
 - 📱 **Mobile App** – React Native + Expo cross-platform client (`apps/mobile`)
 - 📋 **Policy Engine** – YAML-driven enterprise policy enforcement (compute limits, validator rules, fleet policies)
 - 🐳 **Production Infrastructure** – Docker, Kubernetes (Kustomize), Prometheus, Grafana

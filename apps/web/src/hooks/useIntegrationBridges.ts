@@ -18,6 +18,12 @@ import type {
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function generateSecurePlaceholderId(): string {
+  const bytes = new Uint8Array(8);
+  globalThis.crypto.getRandomValues(bytes);
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('');
+}
+
 async function registerWallet(
   payload: WalletRegistrationPayload,
 ): Promise<WalletRegistrationResult> {
@@ -40,21 +46,32 @@ async function requestWalletProvisioning(
   // a canonical public address; UI never handles secrets.
   await wait(120);
   const networkPrefix = payload.network === 'mainnet' ? 'gxqs1' : 'tgxqs1';
-  const rpcHint = payload.rpcUrl.startsWith('http') ? 'rpc' : 'offline';
+  const placeholderId = generateSecurePlaceholderId();
   return {
-    walletAddress: `${networkPrefix}walletd-${rpcHint}-pending`,
+    walletAddress: `${networkPrefix}walletd-placeholder-${placeholderId}`,
     source: 'walletd-placeholder',
   };
 }
 
-async function requestWalletImport(payload: WalletImportPayload): Promise<WalletImportResult> {
+async function requestWalletImport({
+  mode,
+  network,
+  secureSessionId,
+}: WalletImportPayload): Promise<WalletImportResult> {
   // Placeholder only. UI submits an opaque secure-session identifier to walletd.
   // Sensitive seed/private-key/keystore content must stay in walletd process scope.
   await wait(120);
-  const networkPrefix = payload.network === 'mainnet' ? 'gxqs1' : 'tgxqs1';
+  const networkPrefix = network === 'mainnet' ? 'gxqs1' : 'tgxqs1';
+  const placeholderId = generateSecurePlaceholderId();
+  let importStatus: WalletImportResult['status'] = 'queued';
+  // Explicit placeholder convention: walletd can return the literal marker
+  // "imported" when an import has already been finalized server-side.
+  if (secureSessionId.trim().toLowerCase() === 'imported') {
+    importStatus = 'imported';
+  }
   return {
-    walletAddress: `${networkPrefix}import-${payload.mode}-${payload.secureSessionId.slice(0, 6)}`,
-    status: 'queued',
+    walletAddress: `${networkPrefix}import-placeholder-${mode}-${placeholderId}`,
+    status: importStatus,
   };
 }
 

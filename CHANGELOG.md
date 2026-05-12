@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - email confirmation + Google login UI state placeholders
   - seed phrase / private key / keystore import request via opaque walletd session identifiers
   - testnet/mainnet toggle + RPC profile configuration
-  - wallet export actions for public metadata only
+  - removed seed/private-key export from UI; retained public address/metadata export only
 - Typed integration bridge placeholders for future `core.git` wallet daemon sync and `Exployer.git` explorer sync
 - Cyber-futuristic dashboard enhancements: GPU overview, network topology, mining chart, and system health refinements
 
