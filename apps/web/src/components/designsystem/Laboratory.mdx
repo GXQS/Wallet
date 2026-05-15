@@ -1,0 +1,29 @@
+import { Meta, Title, Subtitle, Description, Primary, Stories } from '@storybook/blocks';
+
+<Meta title="DesignSystem/Laboratory" />
+
+<Title>GXQS Design System Laboratory</Title>
+<Subtitle>Official mobile-first component lab for GXQS Wallet</Subtitle>
+<Description>
+This laboratory validates responsive behavior, glassmorphism, accessibility, theme contrast, and motion quality across the GXQS interface system.
+</Description>
+
+## Validation Scope
+
+- Mobile-first previews on every story.
+- Responsive breakpoint testing (XS, SM, MD, LG, XL, 2XL).
+- Glass surface rendering checks.
+- Dark and light theme comparison.
+- Accessibility audits via the a11y addon.
+- Interaction and animation checks.
+- Design token documentation for consistent implementation.
+
+## Workflow
+
+1. Run `pnpm --filter @gxqs/web storybook` in Codespaces.
+2. Open forwarded port `6006` in browser.
+3. Validate components across breakpoints and themes.
+4. Run `pnpm --filter @gxqs/web build-storybook` before merge.
+
+<Primary />
+<Stories />

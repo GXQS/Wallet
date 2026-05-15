@@ -3,6 +3,7 @@ packages:
   - 'packages/*'
   - 'runtime/protocol/go-rpc-bridge'
 allowBuilds:
+  core-js-pure: true
   esbuild: true
   lefthook: true
   sharp: true
