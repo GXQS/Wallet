@@ -115,3 +115,46 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #00ffe140;
 }
+
+/* Adaptive Layout Rules */
+
+/* Panels collapse into drawers on smaller screens */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+  .drawer {
+    display: block;
+  }
+}
+
+/* Widgets reorder dynamically */
+@media (max-width: 1024px) {
+  .widget-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* Tables transform into cards */
+@media (max-width: 768px) {
+  .table {
+    display: none;
+  }
+  .card-list {
+    display: block;
+  }
+}
+
+/* Optimize glassmorphism for mobile */
+@media (max-width: 480px) {
+  .glass {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .glass-accent {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+}

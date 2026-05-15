@@ -1,11 +1,14 @@
 pre-commit:
   commands:
+    format-write-staged:
+      run: pnpm format:staged
+      stage_fixed: true
+    format-check:
+      run: pnpm format:check
     lint:
       run: pnpm lint
     typecheck:
       run: pnpm typecheck
-    format-check:
-      run: pnpm format:check
 
 commit-msg:
   commands:

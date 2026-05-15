@@ -137,6 +137,29 @@ curl http://localhost:8545/healthz
 curl http://localhost:8545/rpc/v1/version
 ```
 
+## Developer Commit Workflow
+
+Pre-commit checks are enforced with Lefthook in strict order:
+
+1. `pnpm format:staged` (via `lint-staged`) runs `prettier --write` on staged files only.
+2. `pnpm format:check` validates formatting across repository policy scope.
+3. `pnpm lint` and `pnpm typecheck` enforce static quality gates.
+
+This prevents manual formatting misses while preserving strict enforcement.
+
+### Useful Commands
+
+```bash
+# Format only staged files (same behavior as pre-commit step)
+pnpm format:staged
+
+# Format full repository
+pnpm format
+
+# Verify formatting without writing changes
+pnpm format:check
+```
+
 ### Dashboard screenshot
 
 ![GXQS Runtime Platform Dashboard](docs/images/gxqs-dashboard-reference.svg)
