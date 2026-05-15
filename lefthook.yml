@@ -1,5 +1,7 @@
 pre-commit:
   commands:
+    00-staged-only-guard:
+      run: pnpm staged:guard
     00-generated-file-guard:
       run: pnpm generated:guard
     10-format-write-staged:
@@ -16,3 +18,10 @@ commit-msg:
   commands:
     commitlint:
       run: npx --no-install commitlint --edit {1}
+
+pre-push:
+  commands:
+    10-lint:
+      run: pnpm lint
+    20-typecheck:
+      run: pnpm typecheck
