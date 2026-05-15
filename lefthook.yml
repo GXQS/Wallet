@@ -1,10 +1,12 @@
 pre-commit:
   commands:
+    generated-file-guard:
+      run: pnpm generated:guard
     format-write-staged:
       run: pnpm format:staged
       stage_fixed: true
-    format-check:
-      run: pnpm format:check
+    format-check-staged:
+      run: pnpm format:check:staged
     lint:
       run: pnpm lint
     typecheck:

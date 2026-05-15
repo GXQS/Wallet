@@ -21,8 +21,10 @@
     "test": "turbo run test",
     "clean": "turbo run clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
-    "format:staged": "lint-staged --allow-empty",
+    "format:staged": "lint-staged --config .lintstagedrc.write.cjs --allow-empty",
+    "format:check:staged": "lint-staged --config .lintstagedrc.check.cjs --allow-empty",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "generated:guard": "bash scripts/hooks/generated-file-guard.sh",
     "audit": "pnpm audit --audit-level=moderate --ignore GHSA-34x7-hfp2-rc4v --ignore GHSA-8qq5-rm4j-mr97 --ignore GHSA-83g3-92jg-28cx --ignore GHSA-qffp-2rhf-9h96 --ignore GHSA-9ppj-qmqm-q256 --ignore GHSA-r6q2-hw4h-h46w",
     "prepare": "lefthook install",
     "start": "pnpm --filter @gxqs/web start"
@@ -36,9 +38,6 @@
     "prettier": "^3.5.3",
     "turbo": "^2.5.4",
     "typescript": "^5.9.3"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,md,css}": "prettier --write"
   },
   "pnpm": {
     "overrides": {
