@@ -10,7 +10,7 @@ const GPU_UNITS: { id: string; util: number; temp: number; mem: number }[] = [
 
 export function MiningPanel() {
   return (
-    <div className="glass rounded-xl p-4 sm:p-5 h-full min-h-48 flex flex-col gap-3">
+    <div className="glass rounded-xl p-4 sm:p-5 h-full min-h-48 flex flex-col gap-3 cq-panel">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-mono text-gxqs-muted uppercase tracking-widest">

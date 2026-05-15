@@ -173,6 +173,11 @@ pnpm format:check
 
 ![GXQS Runtime Platform Dashboard](docs/images/gxqs-dashboard-reference.svg)
 
+### Adaptive UI Documentation
+
+- `docs/architecture/MOBILE_FIRST_ADAPTIVE_UI.md`
+- `docs/RESPONSIVE_STORYBOOK_DOCS.md`
+
 ### Full stack (Docker Compose)
 
 ```bash

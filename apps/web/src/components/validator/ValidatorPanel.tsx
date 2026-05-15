@@ -2,7 +2,7 @@
 
 export function ValidatorPanel() {
   return (
-    <div className="glass rounded-xl p-4 sm:p-5 h-full min-h-48">
+    <div className="glass rounded-xl p-4 sm:p-5 h-full min-h-48 cq-panel">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <h2 className="text-sm font-mono text-gxqs-muted uppercase tracking-widest">Validator</h2>
         <span className="text-gxqs-muted text-xs font-mono">● Inactive</span>

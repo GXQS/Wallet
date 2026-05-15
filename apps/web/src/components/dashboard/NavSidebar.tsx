@@ -11,8 +11,9 @@ const NAV_ITEMS = [
 export function NavSidebar() {
   return (
     <nav
-      className="w-16 lg:w-56 flex flex-col border-r border-gxqs-border shrink-0"
+      className="w-full md:w-16 lg:w-56 h-full flex flex-col border-r border-gxqs-border shrink-0"
       style={{ background: 'rgba(11, 15, 28, 0.92)', backdropFilter: 'blur(12px)' }}
+      aria-label="Primary navigation"
     >
       {/* Logo */}
       <div className="px-4 py-5 border-b border-gxqs-border">
@@ -36,7 +37,7 @@ export function NavSidebar() {
               <span className="text-gxqs-primary text-base group-hover:drop-shadow-[0_0_6px_#00ffe1]">
                 {item.icon}
               </span>
-              <span className="hidden lg:block">{item.label}</span>
+              <span className="md:hidden lg:block">{item.label}</span>
             </a>
           </li>
         ))}

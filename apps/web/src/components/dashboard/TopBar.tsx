@@ -2,7 +2,11 @@
 
 import { useRuntimeStore } from '@/store/runtimeStore';
 
-export function TopBar() {
+interface TopBarProps {
+  onToggleMobileNav: () => void;
+}
+
+export function TopBar({ onToggleMobileNav }: TopBarProps) {
   const { networkStatus, blockHeight } = useRuntimeStore();
 
   return (
@@ -11,6 +15,14 @@ export function TopBar() {
       style={{ background: 'rgba(15, 23, 42, 0.92)', backdropFilter: 'blur(12px)' }}
     >
       <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={onToggleMobileNav}
+          className="md:hidden rounded-md border border-gxqs-border px-2 py-1 text-xs font-mono text-gxqs-primary"
+          aria-label="Toggle navigation drawer"
+        >
+          Menu
+        </button>
         {/* Logo mark */}
         <span className="text-gxqs-primary font-mono font-bold text-base tracking-[0.1em] glow-text">
           GXQS Runtime Platform
@@ -43,6 +55,11 @@ export function TopBar() {
         <div className="hidden lg:flex items-center gap-1.5 text-xs font-mono">
           <span className="text-gxqs-muted">PEERS</span>
           <span className="text-gxqs-primary">0</span>
+        </div>
+
+        <div className="hidden xl:flex items-center gap-1.5 text-xs font-mono">
+          <span className="text-gxqs-muted">SHORTCUT</span>
+          <kbd className="rounded border border-gxqs-border px-1.5 py-0.5 text-gxqs-primary">G</kbd>
         </div>
 
         {/* Network status indicator */}

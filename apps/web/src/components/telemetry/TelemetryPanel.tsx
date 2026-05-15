@@ -88,7 +88,7 @@ export function TelemetryPanel() {
       </div>
 
       {/* Mobile process cards */}
-      <div className="space-y-2 md:hidden">
+      <div className="mobile-card-list space-y-2 md:hidden">
         {TELEMETRY_ROWS.map((row) => (
           <div
             key={row.label}
@@ -117,7 +117,7 @@ export function TelemetryPanel() {
       </div>
 
       {/* Process table */}
-      <div className="hidden md:block overflow-x-auto">
+      <div className="desktop-table hidden md:block overflow-x-auto">
         <table className="w-full text-xs font-mono">
           <thead>
             <tr className="text-gxqs-muted border-b border-gxqs-border">
