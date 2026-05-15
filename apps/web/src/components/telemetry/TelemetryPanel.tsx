@@ -55,14 +55,16 @@ const STATUS_COLOR = {
 
 export function TelemetryPanel() {
   return (
-    <div className="glass rounded-xl p-5">
+    <div className="glass rounded-xl p-4 sm:p-5">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <h2 className="text-sm font-mono text-gxqs-muted uppercase tracking-widest">
           Runtime Supervisor
         </h2>
-        <div className="flex items-center gap-3">
-          <span className="text-gxqs-muted text-xs font-mono">GXQS.exe Process Table</span>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="text-gxqs-muted text-xs font-mono hidden sm:inline">
+            GXQS.exe Process Table
+          </span>
           <span className="text-gxqs-muted text-xs font-mono border border-gxqs-border px-2 py-0.5 rounded">
             0/5 running
           </span>
@@ -70,7 +72,7 @@ export function TelemetryPanel() {
       </div>
 
       {/* System Health cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-2 mb-4">
         {HEALTH_METRICS.map((m) => (
           <div
             key={m.label}
@@ -85,8 +87,37 @@ export function TelemetryPanel() {
         ))}
       </div>
 
+      {/* Mobile process cards */}
+      <div className="space-y-2 md:hidden">
+        {TELEMETRY_ROWS.map((row) => (
+          <div
+            key={row.label}
+            className="rounded-lg border border-gxqs-border/40 bg-gxqs-border/10 p-3"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-white text-xs font-mono">{row.label}</span>
+              <span
+                className={
+                  row.status === 'running'
+                    ? 'text-gxqs-success text-xs font-mono'
+                    : 'text-gxqs-muted text-xs font-mono'
+                }
+              >
+                ● {row.status}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-gxqs-muted">
+              <span>PID: {row.pid}</span>
+              <span>CPU: {row.cpu}</span>
+              <span>MEM: {row.mem}</span>
+              <span>UP: {row.uptime}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Process table */}
-      <div className="overflow-x-auto">
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-xs font-mono">
           <thead>
             <tr className="text-gxqs-muted border-b border-gxqs-border">

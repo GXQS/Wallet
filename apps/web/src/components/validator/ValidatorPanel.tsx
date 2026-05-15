@@ -2,14 +2,14 @@
 
 export function ValidatorPanel() {
   return (
-    <div className="glass rounded-xl p-5 h-full min-h-48">
-      <div className="flex items-center justify-between mb-4">
+    <div className="glass rounded-xl p-4 sm:p-5 h-full min-h-48">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <h2 className="text-sm font-mono text-gxqs-muted uppercase tracking-widest">Validator</h2>
         <span className="text-gxqs-muted text-xs font-mono">● Inactive</span>
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-2 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
         <div className="bg-gxqs-border/40 rounded-lg p-3">
           <div className="text-gxqs-muted text-xs font-mono mb-1">Stake</div>
           <div className="text-gxqs-primary font-mono font-bold">0 GXQS</div>
@@ -40,7 +40,7 @@ export function ValidatorPanel() {
       </div>
 
       {/* Peers + Epoch */}
-      <div className="flex gap-4 text-xs font-mono mb-4">
+      <div className="flex flex-wrap gap-3 sm:gap-4 text-xs font-mono mb-4">
         <span className="text-gxqs-muted">
           Peers <span className="text-white">0</span>
         </span>
