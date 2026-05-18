@@ -29,7 +29,7 @@ GXQS is **not** a wallet app. It is an enterprise blockchain operating platform 
 │         │                                                                   │
 │  ┌──────▼──────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
 │  │ Rust Vault  │  │   Policy    │  │  Runtime    │  │      Deployerd      │ │
-│  │ (AES-256)   │  │   Engine    │  │ Supervisor  │  │    (deployment)     │ │
+│  │(AES-256-GCM)│  │   Engine    │  │ Supervisor  │  │    (deployment)     │ │
 │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────────────┘ │
 │         │                                                                   │
 │  ┌──────▼──────┐                                                           │
@@ -41,13 +41,13 @@ GXQS is **not** a wallet app. It is an enterprise blockchain operating platform 
 
 ### Non-Negotiable Security Rules
 
-| Rule | Detail |
-|------|--------|
-| ❌ **No key exposure** | Private keys never leave `walletd`; renderer/UI processes receive only signed outputs |
-| ❌ **No vault access** | Mining runtimes operate without any vault access |
-| ❌ **No signing duplication** | All signing originates from `walletd`; no frontend reimplementation |
-| ✅ **Authenticated IPC** | All RPC channels require authentication + scoped permissions |
-| ✅ **Untrusted surfaces** | Web, Desktop, Mobile, and Browser runtimes are treated as untrusted |
+| Rule                          | Detail                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------- |
+| ❌ **No key exposure**        | Private keys never leave `walletd`; renderer/UI processes receive only signed outputs |
+| ❌ **No vault access**        | Mining runtimes operate without any vault access                                      |
+| ❌ **No signing duplication** | All signing originates from `walletd`; no frontend reimplementation                   |
+| ✅ **Authenticated IPC**      | All RPC channels require authentication + scoped permissions                          |
+| ✅ **Untrusted surfaces**     | Web, Desktop, Mobile, and Browser runtimes are treated as untrusted                   |
 
 ## Repository Structure
 
@@ -80,13 +80,15 @@ wallet/
 ### Option A — One-command bootstrap (recommended)
 
 **Linux / macOS:**
+
 ```bash
-# Installs Go 1.25.10, Rust 1.95, Node 24, pnpm, then builds everything
+# Verifies prerequisites, syncs/fetches dependencies, and installs audit tools
 bash scripts/bootstrap.sh
 make build
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 # Run from repo root
 .\scripts\bootstrap.ps1
@@ -95,7 +97,7 @@ make build
 
 ### Option B — Manual setup
 
-**Prerequisites:** Go 1.25.10+, Rust 1.95+, Node.js 24+, pnpm 11+
+**Prerequisites:** Go 1.24+, Rust 1.94.1+, Node.js 24+, pnpm 11+
 
 ```bash
 # 1 — TypeScript packages
@@ -128,6 +130,7 @@ Pre-commit checks are enforced with Lefthook in strict order:
 4. `pnpm lint` and `pnpm typecheck` – static quality gates
 
 For generated file classification and commit behavior, see:
+
 - `docs/GENERATED_FILE_POLICY.md`
 - `docs/CONTRIBUTOR_WORKFLOW.md`
 
@@ -151,7 +154,8 @@ pnpm format:check
 
 ![GXQS Runtime Platform Dashboard](./apps/web/public/screenshots/dashboard.svg)
 
-*Enterprise dashboard featuring:*
+_Enterprise dashboard featuring:_
+
 - **Real-time telemetry** – Live TPS, block height, finality, validator count
 - **Neon glow system** – `#00ffe1` primary glow with state-driven animations
 - **Glassmorphism UI** – Frosted glass effects with depth levels
@@ -180,67 +184,67 @@ docker compose up -d
 
 ## Makefile Targets
 
-| Command | Description |
-|---------|-------------|
-| `make help` | Show all targets |
-| `make bootstrap` | Install all toolchains + dependencies |
-| `make build` | Build all (Go, Rust, TypeScript) |
-| `make test` | Run all tests |
-| `make lint` | Lint all workspaces |
-| `make typecheck` | TypeScript type-check |
-| `make audit` | Security audit (pnpm + cargo) |
-| `make fmt` | Format all code |
-| `make docker` | Build Docker images |
-| `make k8s` | Apply Kubernetes manifests |
-| `make clean` | Remove build artifacts |
+| Command          | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| `make help`      | Show all targets                                             |
+| `make bootstrap` | Install all toolchain prerequisites and project dependencies |
+| `make build`     | Build all (Go, Rust, TypeScript)                             |
+| `make test`      | Run all tests                                                |
+| `make lint`      | Lint all workspaces                                          |
+| `make typecheck` | TypeScript type-check                                        |
+| `make audit`     | Security audit (pnpm + cargo)                                |
+| `make fmt`       | Format all code                                              |
+| `make docker`    | Build Docker images                                          |
+| `make k8s`       | Apply Kubernetes manifests                                   |
+| `make clean`     | Remove build artifacts                                       |
 
 ## CI/CD
 
-All pull requests must pass:
+All pull requests must pass required CI gates. `govulncheck` currently runs as report-only (non-blocking):
 
-| Gate | Tool |
-|------|------|
-| TypeScript check | `tsc --noEmit` |
-| Go vet | `go vet` |
-| Go test (race) | `go test -race` |
-| Go build | `go build` |
-| Go vuln check | `govulncheck` |
-| Rust clippy | `cargo clippy` |
-| Rust fmt | `cargo fmt` |
-| npm audit | `pnpm audit` |
-| cargo audit | `cargo audit` |
-| WASM build | `cargo build --target wasm32-unknown-unknown` |
-| Prettier format | `prettier --check` |
+| Gate                        | Tool                                          |
+| --------------------------- | --------------------------------------------- |
+| TypeScript check            | `tsc --noEmit`                                |
+| Go vet                      | `go vet`                                      |
+| Go test (race)              | `go test -race`                               |
+| Go build                    | `go build`                                    |
+| Go vuln check (report-only) | `govulncheck`                                 |
+| Rust clippy                 | `cargo clippy`                                |
+| Rust fmt                    | `cargo fmt`                                   |
+| npm audit                   | `pnpm audit`                                  |
+| cargo audit                 | `cargo audit`                                 |
+| WASM build                  | `cargo build --target wasm32-unknown-unknown` |
+| Prettier format             | `prettier --check`                            |
 
 CI runs on **Ubuntu**, **Windows**, and **macOS** for all language stacks.
 
 ## Security Model
 
-| Process | Vault Access | Network Access | UI Access |
-|---------|--------------|----------------|-----------|
-| walletd | ✅ R/W | Internal only | ❌ |
-| minerd | ❌ | Pool RPC only | ❌ |
-| validatord | ❌ | Consensus RPC | ❌ |
-| telemetryd | ❌ | Telemetry sink | ❌ |
-| Web UI | ❌ | walletd IPC | ✅ |
-| Browser | ❌ | Pool RPC only | ✅ |
+| Process    | Vault Access | Network Access | UI Access |
+| ---------- | ------------ | -------------- | --------- |
+| walletd    | ✅ R/W       | Internal only  | ❌        |
+| minerd     | ❌           | Pool RPC only  | ❌        |
+| validatord | ❌           | Consensus RPC  | ❌        |
+| telemetryd | ❌           | Telemetry sink | ❌        |
+| Web UI     | ❌           | walletd IPC    | ✅        |
+| Browser    | ❌           | Pool RPC only  | ✅        |
 
 ## Modern UI Features
 
-| Feature | Description |
-|---------|-------------|
-| **Neon Glow System** | State-driven glow effects (hover, active, critical) with `#00ffe1` primary |
-| **Glassmorphism** | Three depth levels (L1/L2/L3) with backdrop blur and translucent borders |
-| **Responsive Navigation** | Sidebar on desktop → Bottom nav with expandable tray on mobile |
-| **Live Streaming** | Server-Sent Events (SSE) for blocks and events – no browser gRPC |
-| **Collapsible Charts** | Toggle charts on mobile, memoized for performance |
-| **Dark Theme** | Cyberpunk-inspired dark interface with high contrast |
+| Feature                   | Description                                                                |
+| ------------------------- | -------------------------------------------------------------------------- |
+| **Neon Glow System**      | State-driven glow effects (hover, active, critical) with `#00ffe1` primary |
+| **Glassmorphism**         | Three depth levels (L1/L2/L3) with backdrop blur and translucent borders   |
+| **Responsive Navigation** | Sidebar on desktop → Bottom nav with expandable tray on mobile             |
+| **Live Streaming**        | Server-Sent Events (SSE) for blocks and events – no browser gRPC           |
+| **Collapsible Charts**    | Toggle charts on mobile, memoized for performance                          |
+| **Dark Theme**            | Cyberpunk-inspired dark interface with high contrast                       |
 
 ## Core Integration
 
 Wallet v0.1.0 consumes **Core as the protocol authority**:
 
-- ✅ Canonical Protobuf schemas from `/proto`
+- ✅ Canonical Protobuf schemas from `github.com/GXQS/core` (`proto/` in Core repo)
 - ✅ Hybrid post-quantum signing (Ed25519 + Dilithium2)
 - ✅ gRPC client wrapper for `WalletService`
 - ✅ Deterministic event sourcing support
