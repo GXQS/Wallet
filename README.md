@@ -17,39 +17,26 @@ GXQS is **not** a wallet app. It is an enterprise blockchain operating platform 
 - 📋 **Policy Engine** – YAML-driven enterprise policy enforcement (compute limits, validator rules, fleet policies)
 - 🐳 **Production Infrastructure** – Docker, Kubernetes (Kustomize), Prometheus, Grafana
 
----
-
 ## Architecture
 
-```mermaid
-graph TD
-    CORE["GXQS/core\n(Protocol Authority)"]
-    EXP["GXQS/Exployer\n(Explorer + Contracts Indexer)"]
-
-    subgraph Wallet["GXQS/Wallet — Control Plane"]
-        WD["walletd\n(Go JSON-RPC bridge)\n• Address derivation\n• Tx builder / signer\n• Vault gateway"]
-        VAULT["Rust Crypto Core\n• AES-256-GCM vault\n• zeroize-on-drop SecretKey\n• WASM bindings"]
-        SUP["Runtime Supervisor\n(Go)\n• walletd  • minerd\n• validatord  • telemetryd\n• deployerd"]
-        PE["Policy Engine\n(Go + YAML)\n• CPU/GPU limits\n• Fleet policies\n• Validator rules"]
-    end
-
-    subgraph Frontends["Untrusted Presentation Layer"]
-        WEB["Web Dashboard\n(Next.js 16)\n#00ffe1 glow system"]
-        DESK["Desktop\n(Tauri)"]
-        MOB["Mobile\n(React Native + Expo)"]
-        BROWSER["Browser Compute\n(WASM + WebGPU)"]
-    end
-
-    CORE -->|protocol types| WD
-    WD <-->|vault R/W| VAULT
-    SUP -->|spawn / health-check| WD
-    PE -->|policy enforcement| SUP
-    WEB -->|RPC over HTTP| WD
-    WEB -->|index + contract sync hooks| EXP
-    EXP -->|network analytics + contract state| WEB
-    DESK -->|RPC over IPC| WD
-    MOB -->|RPC over HTTP| WD
-    BROWSER -->|WASM| VAULT
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              GXQS/Wallet                                   │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │   walletd   │  │   minerd    │  │  validatord │  │     telemetryd      │ │
+│  │ (Go bridge) │  │ (mining)    │  │ (validator) │  │     (metrics)       │ │
+│  └──────┬──────┘  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+│         │                                                                   │
+│  ┌──────▼──────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ Rust Vault  │  │   Policy    │  │  Runtime    │  │      Deployerd      │ │
+│  │(AES-256-GCM)│  │   Engine    │  │ Supervisor  │  │    (deployment)     │ │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+│         │                                                                   │
+│  ┌──────▼──────┐                                                           │
+│  │   Core      │  ← Protocol authority (github.com/GXQS/core)              │
+│  │  (gRPC)     │                                                           │
+│  └─────────────┘                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Non-Negotiable Security Rules
@@ -61,8 +48,6 @@ graph TD
 | ❌ **No signing duplication** | All signing originates from `walletd`; no frontend reimplementation                   |
 | ✅ **Authenticated IPC**      | All RPC channels require authentication + scoped permissions                          |
 | ✅ **Untrusted surfaces**     | Web, Desktop, Mobile, and Browser runtimes are treated as untrusted                   |
-
----
 
 ## Repository Structure
 
@@ -77,7 +62,7 @@ wallet/
 ├── runtime/
 │   ├── gxqs-runtime/          # Runtime supervisor (watchdog)
 │   ├── protocol/
-│   │   └── go-rpc-bridge/     # Go JSON-RPC walletd
+│   │   └── go-rpc-bridge/     # Go JSON-RPC walletd (Core integration)
 │   ├── policy-engine/         # YAML enterprise policy engine
 │   └── crypto/
 │       └── gxqs-wallet-core-rs/  # Rust: AES-256-GCM vault + WASM
@@ -90,8 +75,6 @@ wallet/
 └── .github/workflows/         # CI: Go, Rust, TypeScript, WASM
 ```
 
----
-
 ## Quick Start
 
 ### Option A — One-command bootstrap (recommended)
@@ -99,7 +82,7 @@ wallet/
 **Linux / macOS:**
 
 ```bash
-# Installs go 1.25.10, Rust 1.95, Node 24, pnpm, then builds everything
+# Verifies prerequisites, syncs/fetches dependencies, and installs audit tools
 bash scripts/bootstrap.sh
 make build
 ```
@@ -114,7 +97,7 @@ make build
 
 ### Option B — Manual setup
 
-**Prerequisites:** Go 1.25.10+, Rust 1.95+, Node.js 24+, pnpm 11+
+**Prerequisites:** Go 1.24+, Rust 1.94.1+, Node.js 24+, pnpm 11+
 
 ```bash
 # 1 — TypeScript packages
@@ -141,12 +124,10 @@ curl http://localhost:8545/rpc/v1/version
 
 Pre-commit checks are enforced with Lefthook in strict order:
 
-1. `pnpm generated:guard` removes non-material generated-file drift from staging.
-2. `pnpm format:staged` (via `lint-staged`) runs `prettier --write` on staged files only.
-3. `pnpm format:check:staged` applies strict `prettier --check` to staged files.
-4. `pnpm lint` and `pnpm typecheck` enforce static quality gates.
-
-This prevents manual formatting misses while preserving strict enforcement.
+1. `pnpm generated:guard` – removes non-material generated-file drift from staging
+2. `pnpm format:staged` – runs `prettier --write` on staged files only
+3. `pnpm format:check:staged` – strict `prettier --check` on staged files
+4. `pnpm lint` and `pnpm typecheck` – static quality gates
 
 For generated file classification and commit behavior, see:
 
@@ -169,30 +150,28 @@ pnpm format
 pnpm format:check
 ```
 
-## ??? Dashboard Screenshot
+## Dashboard Mockup
 
 ![GXQS Runtime Platform Dashboard](./apps/web/public/screenshots/dashboard.svg)
 
-*Enterprise dashboard featuring:*
-- **Real-time telemetry** � Live TPS, block height, finality, validator count
-- **Neon glow system** � `#00ffe1` primary glow with state-driven animations
-- **Glassmorphism UI** � Frosted glass effects with depth levels
-- **Responsive design** � Mobile-first adaptive layout with bottom navigation
-- **Live charts** � Collapsible TPS chart with auto-refresh
-- **Block stream** � Real-time block updates with SSE streaming
-- **Mempool monitor** � Priority-based transaction visualization
+_Enterprise dashboard featuring:_
 
-> **Note:** This is a representative screenshot. The actual dashboard is fully interactive with live Core gRPC data.
+- **Real-time telemetry** – Live TPS, block height, finality, validator count
+- **Neon glow system** – `#00ffe1` primary glow with state-driven animations
+- **Glassmorphism UI** – Frosted glass effects with depth levels
+- **Responsive design** – Mobile-first adaptive layout with bottom navigation
+- **Live charts** – Collapsible TPS chart with auto-refresh
+- **Block stream** – Real-time block updates with SSE streaming
+- **Mempool monitor** – Priority-based transaction visualization
 
+> **Note:** This is a representative SVG mockup. The actual dashboard is fully interactive with live Core gRPC data.
 
-![GXQS Runtime Platform Dashboard](docs/images/gxqs-dashboard-reference.svg)
-
-### Adaptive UI Documentation
+## Adaptive UI Documentation
 
 - `docs/architecture/MOBILE_FIRST_ADAPTIVE_UI.md`
 - `docs/RESPONSIVE_STORYBOOK_DOCS.md`
 
-### Full stack (Docker Compose)
+## Full Stack (Docker Compose)
 
 ```bash
 cd infra/docker
@@ -203,67 +182,72 @@ docker compose up -d
 # Prometheus    → http://localhost:9090
 ```
 
-### Makefile targets
+## Makefile Targets
 
-```
-make help        Show all targets
-make bootstrap   Install all toolchains + dependencies
-make build       Build all (Go, Rust, TypeScript)
-make test        Run all tests
-make lint        Lint all workspaces
-make typecheck   TypeScript type-check
-make audit       Security audit (pnpm + cargo)
-make fmt         Format all code
-make docker      Build Docker images
-make k8s         Apply Kubernetes manifests
-make clean       Remove build artifacts
-```
-
----
+| Command          | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| `make help`      | Show all targets                                             |
+| `make bootstrap` | Install all toolchain prerequisites and project dependencies |
+| `make build`     | Build all (Go, Rust, TypeScript)                             |
+| `make test`      | Run all tests                                                |
+| `make lint`      | Lint all workspaces                                          |
+| `make typecheck` | TypeScript type-check                                        |
+| `make audit`     | Security audit (pnpm + cargo)                                |
+| `make fmt`       | Format all code                                              |
+| `make docker`    | Build Docker images                                          |
+| `make k8s`       | Apply Kubernetes manifests                                   |
+| `make clean`     | Remove build artifacts                                       |
 
 ## CI/CD
 
-All pull requests must pass:
+All pull requests must pass required CI gates. `govulncheck` currently runs as report-only (non-blocking):
 
-| Gate             | Tool                                          |
-| ---------------- | --------------------------------------------- |
-| TypeScript check | `tsc --noEmit`                                |
-| Go vet           | `go vet`                                      |
-| Rust clippy      | `cargo clippy`                                |
-| Rust fmt         | `cargo fmt`                                   |
-| npm audit        | `pnpm audit`                                  |
-| cargo audit      | `cargo audit`                                 |
-| WASM build       | `cargo build --target wasm32-unknown-unknown` |
-| Prettier format  | `prettier --check`                            |
+| Gate                        | Tool                                          |
+| --------------------------- | --------------------------------------------- |
+| TypeScript check            | `tsc --noEmit`                                |
+| Go vet                      | `go vet`                                      |
+| Go test (race)              | `go test -race`                               |
+| Go build                    | `go build`                                    |
+| Go vuln check (report-only) | `govulncheck`                                 |
+| Rust clippy                 | `cargo clippy`                                |
+| Rust fmt                    | `cargo fmt`                                   |
+| npm audit                   | `pnpm audit`                                  |
+| cargo audit                 | `cargo audit`                                 |
+| WASM build                  | `cargo build --target wasm32-unknown-unknown` |
+| Prettier format             | `prettier --check`                            |
 
 CI runs on **Ubuntu**, **Windows**, and **macOS** for all language stacks.
-
----
 
 ## Security Model
 
 | Process    | Vault Access | Network Access | UI Access |
-| ---------- | :----------: | :------------: | :-------: |
-| walletd    |    ✅ R/W    | Internal only  |    ❌     |
-| minerd     |      ❌      | Pool RPC only  |    ❌     |
-| validatord |      ❌      | Consensus RPC  |    ❌     |
-| telemetryd |      ❌      | Telemetry sink |    ❌     |
-| Web UI     |      ❌      |  walletd IPC   |    ✅     |
-| Browser    |      ❌      | Pool RPC only  |    ✅     |
+| ---------- | ------------ | -------------- | --------- |
+| walletd    | ✅ R/W       | Internal only  | ❌        |
+| minerd     | ❌           | Pool RPC only  | ❌        |
+| validatord | ❌           | Consensus RPC  | ❌        |
+| telemetryd | ❌           | Telemetry sink | ❌        |
+| Web UI     | ❌           | walletd IPC    | ✅        |
+| Browser    | ❌           | Pool RPC only  | ✅        |
 
----
+## Modern UI Features
 
+| Feature                   | Description                                                                |
+| ------------------------- | -------------------------------------------------------------------------- |
+| **Neon Glow System**      | State-driven glow effects (hover, active, critical) with `#00ffe1` primary |
+| **Glassmorphism**         | Three depth levels (L1/L2/L3) with backdrop blur and translucent borders   |
+| **Responsive Navigation** | Sidebar on desktop → Bottom nav with expandable tray on mobile             |
+| **Live Streaming**        | Server-Sent Events (SSE) for blocks and events – no browser gRPC           |
+| **Collapsible Charts**    | Toggle charts on mobile, memoized for performance                          |
+| **Dark Theme**            | Cyberpunk-inspired dark interface with high contrast                       |
 
-## ? Modern UI Features
+## Core Integration
 
-| Feature | Description |
-|---------|-------------|
-| **Neon Glow System** | State-driven glow effects (hover, active, critical) with `#00ffe1` primary |
-| **Glassmorphism** | Three depth levels (L1/L2/L3) with backdrop blur and translucent borders |
-| **Responsive Navigation** | Sidebar on desktop ? Bottom nav with expandable tray on mobile |
-| **Live Streaming** | Server-Sent Events (SSE) for blocks and events � no browser gRPC |
-| **Collapsible Charts** | Toggle charts on mobile, memoized for performance |
-| **Dark Theme** | Cyberpunk-inspired dark interface with high contrast |
+Wallet v0.1.0 consumes **Core as the protocol authority**:
+
+- ✅ Canonical Protobuf schemas from `github.com/GXQS/core` (`proto/` in Core repo)
+- ✅ Hybrid post-quantum signing (Ed25519 + Dilithium2)
+- ✅ gRPC client wrapper for `WalletService`
+- ✅ Deterministic event sourcing support
 
 ## License
 
