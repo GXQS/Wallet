@@ -85,6 +85,9 @@ func Parse(s string) (Address, error) {
 			if err != nil {
 				return Address{}, fmt.Errorf("%w: invalid hex encoding", ErrInvalidAddress)
 			}
+			if len(raw) != AddressLength {
+				return Address{}, fmt.Errorf("%w: incorrect decoded length", ErrInvalidAddress)
+			}
 			var out Address
 			copy(out[:], raw)
 			return out, nil

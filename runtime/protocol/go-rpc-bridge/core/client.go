@@ -57,8 +57,9 @@ func normalizeTarget(endpoint string) (string, error) {
 	if trimmed == "" {
 		return "", fmt.Errorf("core grpc endpoint is required")
 	}
-	// Only URL-normalize explicit URL-form endpoints. Plain "host:port" should
-	// not be parsed as a URL because net/url treats it as "<scheme>:<opaque>".
+	// URL-form gRPC targets (e.g. dns:///..., unix:///...) are allowed here, but
+	// plain "host:port" should not be parsed as a URL because net/url treats it
+	// as "<scheme>:<opaque>".
 	if strings.Contains(trimmed, "://") {
 		u, err := url.Parse(trimmed)
 		if err != nil {

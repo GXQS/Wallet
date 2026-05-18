@@ -52,6 +52,7 @@ func New(txType TxType) *Builder {
 	if !isSupportedTxType(txType) {
 		return &Builder{err: fmt.Errorf("unsupported transaction type: %q", txType)}
 	}
+	// Keep DTO and Core timestamps aligned to the same UTC instant.
 	now := time.Now().UTC()
 	return &Builder{tx: Transaction{
 		Version:   1,
