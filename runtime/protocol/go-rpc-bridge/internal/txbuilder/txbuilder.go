@@ -155,11 +155,7 @@ func (tx *Transaction) SigningPayload() []byte {
 	if tx == nil {
 		return nil
 	}
-	// Return a defensive copy so callers cannot mutate our internal Core payload.
-	payload := tx.core.SigningPayload()
-	out := make([]byte, len(payload))
-	copy(out, payload)
-	return out
+	return tx.core.SigningPayload()
 }
 
 func isSupportedTxType(txType TxType) bool {
