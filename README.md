@@ -203,6 +203,8 @@ All pull requests must pass:
 | TypeScript check | `tsc --noEmit` |
 | Go vet | `go vet` |
 | Go test (race) | `go test -race` |
+| Go build | `go build` |
+| Go vuln check | `govulncheck` |
 | Rust clippy | `cargo clippy` |
 | Rust fmt | `cargo fmt` |
 | npm audit | `pnpm audit` |
