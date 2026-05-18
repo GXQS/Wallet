@@ -147,7 +147,7 @@ pnpm format
 pnpm format:check
 ```
 
-## Dashboard Screenshot
+## Dashboard Mockup
 
 ![GXQS Runtime Platform Dashboard](./apps/web/public/screenshots/dashboard.svg)
 
