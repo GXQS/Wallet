@@ -99,7 +99,7 @@ wallet/
 **Linux / macOS:**
 
 ```bash
-# Installs Go 1.24, Rust 1.95, Node 24, pnpm, then builds everything
+# Installs go 1.25.10, Rust 1.95, Node 24, pnpm, then builds everything
 bash scripts/bootstrap.sh
 make build
 ```
@@ -114,7 +114,7 @@ make build
 
 ### Option B ‚Äî Manual setup
 
-**Prerequisites:** Go 1.24+, Rust 1.95+, Node.js 24+, pnpm 11+
+**Prerequisites:** Go 1.25.10+, Rust 1.95+, Node.js 24+, pnpm 11+
 
 ```bash
 # 1 ‚Äî TypeScript packages
@@ -169,7 +169,21 @@ pnpm format
 pnpm format:check
 ```
 
-### Dashboard screenshot
+## ??? Dashboard Screenshot
+
+![GXQS Runtime Platform Dashboard](./apps/web/public/screenshots/dashboard.svg)
+
+*Enterprise dashboard featuring:*
+- **Real-time telemetry** ñ Live TPS, block height, finality, validator count
+- **Neon glow system** ñ `#00ffe1` primary glow with state-driven animations
+- **Glassmorphism UI** ñ Frosted glass effects with depth levels
+- **Responsive design** ñ Mobile-first adaptive layout with bottom navigation
+- **Live charts** ñ Collapsible TPS chart with auto-refresh
+- **Block stream** ñ Real-time block updates with SSE streaming
+- **Mempool monitor** ñ Priority-based transaction visualization
+
+> **Note:** This is a representative screenshot. The actual dashboard is fully interactive with live Core gRPC data.
+
 
 ![GXQS Runtime Platform Dashboard](docs/images/gxqs-dashboard-reference.svg)
 
@@ -238,6 +252,18 @@ CI runs on **Ubuntu**, **Windows**, and **macOS** for all language stacks.
 | Browser    |      ‚ùå      | Pool RPC only  |    ‚úÖ     |
 
 ---
+
+
+## ? Modern UI Features
+
+| Feature | Description |
+|---------|-------------|
+| **Neon Glow System** | State-driven glow effects (hover, active, critical) with `#00ffe1` primary |
+| **Glassmorphism** | Three depth levels (L1/L2/L3) with backdrop blur and translucent borders |
+| **Responsive Navigation** | Sidebar on desktop ? Bottom nav with expandable tray on mobile |
+| **Live Streaming** | Server-Sent Events (SSE) for blocks and events ñ no browser gRPC |
+| **Collapsible Charts** | Toggle charts on mobile, memoized for performance |
+| **Dark Theme** | Cyberpunk-inspired dark interface with high contrast |
 
 ## License
 
