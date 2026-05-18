@@ -137,9 +137,46 @@ curl http://localhost:8545/healthz
 curl http://localhost:8545/rpc/v1/version
 ```
 
+## Developer Commit Workflow
+
+Pre-commit checks are enforced with Lefthook in strict order:
+
+1. `pnpm generated:guard` removes non-material generated-file drift from staging.
+2. `pnpm format:staged` (via `lint-staged`) runs `prettier --write` on staged files only.
+3. `pnpm format:check:staged` applies strict `prettier --check` to staged files.
+4. `pnpm lint` and `pnpm typecheck` enforce static quality gates.
+
+This prevents manual formatting misses while preserving strict enforcement.
+
+For generated file classification and commit behavior, see:
+
+- `docs/GENERATED_FILE_POLICY.md`
+- `docs/CONTRIBUTOR_WORKFLOW.md`
+
+### Useful Commands
+
+```bash
+# Format only staged files (same behavior as pre-commit step)
+pnpm format:staged
+
+# Strictly verify formatting on staged files
+pnpm format:check:staged
+
+# Format full repository
+pnpm format
+
+# Verify formatting without writing changes
+pnpm format:check
+```
+
 ### Dashboard screenshot
 
 ![GXQS Runtime Platform Dashboard](docs/images/gxqs-dashboard-reference.svg)
+
+### Adaptive UI Documentation
+
+- `docs/architecture/MOBILE_FIRST_ADAPTIVE_UI.md`
+- `docs/RESPONSIVE_STORYBOOK_DOCS.md`
 
 ### Full stack (Docker Compose)
 

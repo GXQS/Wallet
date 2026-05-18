@@ -99,7 +99,7 @@ export function WalletPanel() {
   };
 
   return (
-    <div className="glass rounded-xl p-5 h-full min-h-48 flex flex-col gap-4">
+    <div className="glass rounded-xl p-4 sm:p-5 h-full min-h-48 flex flex-col gap-4 cq-panel">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-mono text-gxqs-muted uppercase tracking-widest">
           Smart Wallet
@@ -107,7 +107,7 @@ export function WalletPanel() {
         <span className="text-xs font-mono text-gxqs-success">● Registration Ready</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 compact-stack">
         <button
           type="button"
           onClick={() => handleNetworkChange('mainnet')}
@@ -141,7 +141,7 @@ export function WalletPanel() {
         />
       </label>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 compact-stack">
         <button
           type="button"
           onClick={() => setAuthProvider('email')}
@@ -231,7 +231,7 @@ export function WalletPanel() {
         Import Wallet
       </button>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 compact-stack">
         <button
           type="button"
           onClick={() => handleExport('profile')}
@@ -275,7 +275,7 @@ export function WalletPanel() {
         Status: <span className="text-gxqs-primary">{status}</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+      <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 text-[11px] font-mono compact-stack">
         <div className="rounded border border-gxqs-border bg-black/20 px-2 py-1 text-gxqs-muted">
           Email: {isEmailConfirmed ? 'Confirmed' : 'Pending'}
         </div>

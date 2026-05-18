@@ -21,23 +21,32 @@
     "test": "turbo run test",
     "clean": "turbo run clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "format:staged": "lint-staged --config .lintstagedrc.write.cjs --allow-empty",
+    "format:check:staged": "lint-staged --config .lintstagedrc.check.cjs --allow-empty",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "staged:guard": "bash scripts/hooks/enforce-staged-only.sh",
+    "generated:guard": "bash scripts/hooks/generated-file-guard.sh",
+    "commitlint": "commitlint",
+    "storybook": "pnpm --filter @gxqs/web storybook",
+    "build-storybook": "pnpm --filter @gxqs/web build-storybook",
     "audit": "pnpm audit --audit-level=moderate --ignore GHSA-34x7-hfp2-rc4v --ignore GHSA-8qq5-rm4j-mr97 --ignore GHSA-83g3-92jg-28cx --ignore GHSA-qffp-2rhf-9h96 --ignore GHSA-9ppj-qmqm-q256 --ignore GHSA-r6q2-hw4h-h46w",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "start": "pnpm --filter @gxqs/web start"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.4",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
-    "@changesets/cli": "^2.29.4",
     "lefthook": "^1.11.13",
+    "lint-staged": "^17.0.4",
     "prettier": "^3.5.3",
     "turbo": "^2.5.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   },
   "pnpm": {
     "overrides": {
-      "react": "^19.1.0",
-      "react-dom": "^19.1.0"
+      "react": "18.3.1",
+      "react-dom": "18.3.1"
     },
     "auditConfig": {
       "ignoreGhsas": [

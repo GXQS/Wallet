@@ -21,6 +21,35 @@ env:
   NODE_VERSION: '24'
 
 jobs:
+  commitlint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint commit messages (PR range)
+        if: github.event_name == 'pull_request'
+        run: pnpm commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.sha }}
+
+      - name: Lint latest commit message (push)
+        if: github.event_name == 'push'
+        run: git log -1 --pretty=%B | pnpm commitlint
+
   # ---------------------------------------------------------------------------
   # TypeScript: lint · typecheck · audit · test
   # ---------------------------------------------------------------------------

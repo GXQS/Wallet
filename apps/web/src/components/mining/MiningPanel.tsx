@@ -10,9 +10,9 @@ const GPU_UNITS: { id: string; util: number; temp: number; mem: number }[] = [
 
 export function MiningPanel() {
   return (
-    <div className="glass rounded-xl p-5 h-full min-h-48 flex flex-col gap-3">
+    <div className="glass rounded-xl p-4 sm:p-5 h-full min-h-48 flex flex-col gap-3 cq-panel">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-mono text-gxqs-muted uppercase tracking-widest">
           Compute Engine
         </h2>
@@ -22,14 +22,14 @@ export function MiningPanel() {
       {/* Hashrate + sparkline */}
       <div>
         <div className="text-gxqs-muted text-xs font-mono mb-1">Hashrate</div>
-        <div className="flex items-end gap-3">
+        <div className="flex flex-wrap items-end gap-2 sm:gap-3">
           <div className="text-3xl font-mono font-bold text-gxqs-accent glow-text-accent">0</div>
           <span className="text-gxqs-muted text-xs font-mono mb-1">MH/s</span>
-          <div className="flex items-end gap-0.5 h-8 ml-auto">
+          <div className="flex items-end gap-0.5 h-8 ml-0 sm:ml-auto w-full sm:w-auto">
             {SPARKLINE.map((v, i) => (
               <div
                 key={i}
-                className="w-3 bg-gxqs-accent/30 rounded-sm transition-all duration-500"
+                className="flex-1 sm:flex-none sm:w-3 bg-gxqs-accent/30 rounded-sm transition-all duration-500"
                 style={{ height: `${Math.max(v, 4)}%` }}
               />
             ))}
@@ -45,9 +45,9 @@ export function MiningPanel() {
         <div className="space-y-2">
           {GPU_UNITS.map((gpu) => (
             <div key={gpu.id} className="bg-gxqs-border/20 rounded-lg p-2">
-              <div className="flex justify-between items-center mb-1.5">
+              <div className="flex flex-wrap justify-between items-center gap-1.5 mb-1.5">
                 <span className="text-white text-xs font-mono">{gpu.id}</span>
-                <div className="flex gap-3 text-xs font-mono text-gxqs-muted">
+                <div className="flex flex-wrap gap-2 sm:gap-3 text-xs font-mono text-gxqs-muted">
                   <span>
                     Temp:{' '}
                     <span className="text-gxqs-warning">
@@ -84,7 +84,7 @@ export function MiningPanel() {
       </div>
 
       {/* Shares + perf row */}
-      <div className="flex gap-4 text-xs font-mono">
+      <div className="flex flex-wrap gap-2 sm:gap-4 text-xs font-mono">
         <span className="text-gxqs-muted">
           Accepted <span className="text-gxqs-success font-bold">0</span>
         </span>

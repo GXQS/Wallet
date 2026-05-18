@@ -1,0 +1,13 @@
+# Framework-generated or build-generated artifacts
+apps/web/next-env.d.ts linguist-generated=true
+
+# Build manifests (usually untracked, classified if committed)
+**/build-manifest.json linguist-generated=true
+**/app-build-manifest.json linguist-generated=true
+**/react-loadable-manifest.json linguist-generated=true
+
+# Generated caches/output trees (typically ignored)
+.next/** linguist-generated=true
+.turbo/** linguist-generated=true
+dist/** linguist-generated=true
+build/** linguist-generated=true

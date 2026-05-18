@@ -1,8 +1,14 @@
+'use client';
+
+import { useRef } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { WalletPanel } from '@/components/wallet/WalletPanel';
 import { MiningPanel } from '@/components/mining/MiningPanel';
 import { ValidatorPanel } from '@/components/validator/ValidatorPanel';
 import { TelemetryPanel } from '@/components/telemetry/TelemetryPanel';
+import { ExtensionModesPanel } from '@/components/extension/ExtensionModesPanel';
+import { useAdaptiveRuntime } from '@/hooks/useAdaptiveRuntime';
+import { useContainerMode } from '@/hooks/useContainerMode';
 
 const METRICS = [
   { label: 'Total Balance', value: '4,892.12', unit: 'GXQS', delta: '+3.8%', accent: 'primary' },
@@ -26,12 +32,16 @@ const ACCENT_MAP = {
 } as const;
 
 export default function HomePage() {
+  const pageRef = useRef<HTMLDivElement>(null);
+  const mode = useContainerMode(pageRef);
+  const { compactCharts } = useAdaptiveRuntime();
+
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-4 p-4 h-full overflow-y-auto">
+      <div ref={pageRef} className="dashboard-stack p-3 sm:p-4 h-full overflow-y-auto cq-panel">
         <section id="overview" />
         {/* ── KPI row ─────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="adaptive-cards compact-stack">
           {METRICS.map((m) => (
             <div key={m.label} className="metric-card glow-border">
               <div className="text-gxqs-muted text-xs font-mono mb-1 uppercase tracking-widest">
@@ -48,7 +58,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-12 gap-4">
+        <div className="adaptive-grid">
           <div className="col-span-12 lg:col-span-4 glass rounded-xl p-4">
             <div className="text-gxqs-muted text-xs font-mono uppercase tracking-widest mb-3">
               GPU Overview
@@ -60,7 +70,7 @@ export default function HomePage() {
                 <div className="text-xs font-mono text-gxqs-muted">Utilization</div>
               </div>
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-[11px] font-mono">
+            <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] font-mono">
               <div className="rounded-md border border-gxqs-border p-2 text-gxqs-muted">
                 Temp 63°C
               </div>
@@ -73,7 +83,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="col-span-12 lg:col-span-4 glass rounded-xl p-4">
+          <div className="col-span-12 lg:col-span-4 glass rounded-xl p-4 hide-in-compact">
             <div className="text-gxqs-muted text-xs font-mono uppercase tracking-widest mb-3">
               Network Topology
             </div>
@@ -102,7 +112,7 @@ export default function HomePage() {
             <div className="text-gxqs-muted text-xs font-mono uppercase tracking-widest mb-3">
               Mining Chart
             </div>
-            <div className="h-28 flex items-end gap-1">
+            <div className="chart-bars h-28 flex items-end gap-1">
               {[32, 48, 44, 58, 62, 70, 56, 74, 80, 72, 86, 90].map((value, index) => (
                 <div
                   key={index}
@@ -112,13 +122,13 @@ export default function HomePage() {
               ))}
             </div>
             <div className="mt-3 text-xs font-mono text-gxqs-muted">
-              Trend: +12.7% vs previous epoch
+              Trend: +12.7% vs previous epoch {compactCharts ? '• compact mode' : '• full mode'}
             </div>
           </div>
         </div>
 
         {/* ── Main panel row ──────────────────────────────────────────── */}
-        <div id="wallet" className="grid grid-cols-12 gap-4">
+        <div id="wallet" className="adaptive-grid compact-stack">
           <div className="col-span-12 lg:col-span-4">
             <WalletPanel />
           </div>
@@ -133,6 +143,15 @@ export default function HomePage() {
         {/* ── Telemetry ───────────────────────────────────────────────── */}
         <div id="health">
           <TelemetryPanel />
+        </div>
+
+        <div>
+          <ExtensionModesPanel />
+        </div>
+
+        <div className="text-[11px] font-mono text-gxqs-muted px-1">
+          Adaptive mode: {mode} • rendering density:{' '}
+          {compactCharts ? 'battery-safe' : 'full-analytics'}
         </div>
       </div>
     </DashboardLayout>

@@ -2,7 +2,29 @@
 module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
+    screens: {
+      xs: '320px',
+      sm: '480px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1440px',
+      '2xl': '1920px',
+    },
     extend: {
+      spacing: {
+        xs: 'clamp(0.5rem, 1vw, 1rem)',
+        sm: 'clamp(1rem, 2vw, 2rem)',
+        md: 'clamp(2rem, 4vw, 4rem)',
+        lg: 'clamp(4rem, 6vw, 6rem)',
+        xl: 'clamp(6rem, 8vw, 8rem)',
+      },
+      fontSize: {
+        xs: 'clamp(0.75rem, 1vw, 1rem)',
+        sm: 'clamp(1rem, 1.5vw, 1.25rem)',
+        md: 'clamp(1.25rem, 2vw, 1.5rem)',
+        lg: 'clamp(1.5rem, 2.5vw, 2rem)',
+        xl: 'clamp(2rem, 3vw, 2.5rem)',
+      },
       colors: {
         gxqs: {
           bg: '#0a0a0f', // deep dark base
