@@ -132,10 +132,6 @@ func (b *Builder) Build() (*Transaction, error) {
 
 	b.tx.core.From = coretypes.AddressFromBytes(fromAddr[:])
 	b.tx.core.To = coretypes.AddressFromBytes(toAddr[:])
-	b.tx.core.Value = b.tx.Amount
-	b.tx.core.GasPrice = b.tx.Fee
-	b.tx.core.Nonce = b.tx.Nonce
-	b.tx.core.Data = b.tx.Data
 	b.tx.Hash = b.tx.core.ID().Hex()
 	tx := b.tx
 	return &tx, nil

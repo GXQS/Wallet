@@ -65,9 +65,6 @@ func normalizeTarget(endpoint string) (string, error) {
 		if u.Scheme == "http" || u.Scheme == "https" {
 			return "", fmt.Errorf("http(s) URLs are not valid gRPC targets; use host:port or canonical gRPC target")
 		}
-		if u.Scheme == "" {
-			return "", fmt.Errorf("invalid core grpc target %q", trimmed)
-		}
 	}
 	return trimmed, nil
 }
