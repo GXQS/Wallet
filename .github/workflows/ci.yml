@@ -164,12 +164,12 @@ jobs:
         # is bumped to a version that includes the fixes.
         continue-on-error: true
 
-      - name: golangci-lint
+       - name: golangci-lint
         if: matrix.os == 'ubuntu-latest'
         uses: golangci/golangci-lint-action@v6
         with:
-          working-directory: ${{ matrix.module }}
           version: v1.64.5
+          working-directory: ${{ matrix.module }}
 
   # ---------------------------------------------------------------------------
   # Rust: clippy · test · cargo audit
