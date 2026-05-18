@@ -1,18 +1,14 @@
-// Package txbuilder constructs and serialises GXQS transactions.
-// Transaction construction MUST originate from GXQS/core-compatible protocol
-// primitives; this package acts as the canonical bridge implementation.
+// Package txbuilder constructs GXQS transactions backed by Core protocol types.
 package txbuilder
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
+
+	coretypes "github.com/gxqs/core/types"
 )
 
-// TxType classifies a GXQS transaction.
+// TxType classifies a GXQS transaction request shape.
 type TxType string
 
 const (
@@ -23,33 +19,24 @@ const (
 	TxTypeDeploy    TxType = "deploy"
 )
 
-// Transaction represents a fully-formed GXQS protocol transaction.
-type Transaction struct {
-	Version   uint32    `json:"version"`
-	Type      TxType    `json:"type"`
-	From      string    `json:"from"`
-	To        string    `json:"to"`
-	Amount    uint64    `json:"amount"`
-	Fee       uint64    `json:"fee"`
-	Nonce     uint64    `json:"nonce"`
-	Data      []byte    `json:"data,omitempty"`
-	Timestamp time.Time `json:"timestamp"`
-	Signature string    `json:"signature,omitempty"`
-	Hash      string    `json:"hash,omitempty"`
-}
+// Transaction is the canonical Core transaction type.
+type Transaction = coretypes.Transaction
 
-// Builder provides a fluent API for constructing GXQS transactions.
+// Builder provides a fluent API for constructing Core-backed transactions.
 type Builder struct {
-	tx  Transaction
-	err error
+	tx   coretypes.Transaction
+	from string
+	to   string
+	err  error
 }
 
 // New creates a new Builder for the given transaction type.
 func New(txType TxType) *Builder {
-	return &Builder{tx: Transaction{
-		Version:   1,
-		Type:      txType,
-		Timestamp: time.Now().UTC(),
+	_ = txType
+	return &Builder{tx: coretypes.Transaction{
+		ChainID:   1,
+		Timestamp: time.Now().UnixMilli(),
+		GasLimit:  21_000,
 	}}
 }
 
@@ -58,7 +45,7 @@ func (b *Builder) From(addr string) *Builder {
 	if addr == "" {
 		b.err = errors.New("from address must not be empty")
 	}
-	b.tx.From = addr
+	b.from = addr
 	return b
 }
 
@@ -67,19 +54,19 @@ func (b *Builder) To(addr string) *Builder {
 	if addr == "" {
 		b.err = errors.New("to address must not be empty")
 	}
-	b.tx.To = addr
+	b.to = addr
 	return b
 }
 
-// Amount sets the transfer amount in the smallest denomination (aGXQS).
+// Amount sets the transfer amount in the smallest denomination.
 func (b *Builder) Amount(a uint64) *Builder {
-	b.tx.Amount = a
+	b.tx.Value = a
 	return b
 }
 
-// Fee sets the transaction fee.
+// Fee sets the transaction gas price.
 func (b *Builder) Fee(f uint64) *Builder {
-	b.tx.Fee = f
+	b.tx.GasPrice = f
 	return b
 }
 
@@ -95,49 +82,21 @@ func (b *Builder) Data(d []byte) *Builder {
 	return b
 }
 
-// Build finalises the transaction, computes its hash, and returns it.
+// Build finalises the transaction and returns a Core transaction.
 func (b *Builder) Build() (*Transaction, error) {
 	if b.err != nil {
 		return nil, b.err
 	}
-	if b.tx.From == "" {
+	if b.from == "" {
 		return nil, errors.New("from address is required")
 	}
-	if b.tx.To == "" {
+	if b.to == "" {
 		return nil, errors.New("to address is required")
 	}
 
-	raw, err := json.Marshal(struct {
-		Version   uint32 `json:"version"`
-		Type      TxType `json:"type"`
-		From      string `json:"from"`
-		To        string `json:"to"`
-		Amount    uint64 `json:"amount"`
-		Fee       uint64 `json:"fee"`
-		Nonce     uint64 `json:"nonce"`
-		Timestamp string `json:"timestamp"`
-	}{
-		Version:   b.tx.Version,
-		Type:      b.tx.Type,
-		From:      b.tx.From,
-		To:        b.tx.To,
-		Amount:    b.tx.Amount,
-		Fee:       b.tx.Fee,
-		Nonce:     b.tx.Nonce,
-		Timestamp: b.tx.Timestamp.Format(time.RFC3339Nano),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("marshal tx: %w", err)
-	}
-
-	h := sha256.Sum256(raw)
-	b.tx.Hash = hex.EncodeToString(h[:])
+	b.tx.From = coretypes.DeriveAddress([]byte(b.from))
+	b.tx.To = coretypes.DeriveAddress([]byte(b.to))
 
 	tx := b.tx
 	return &tx, nil
-}
-
-// Bytes serialises the transaction to canonical JSON.
-func (tx *Transaction) Bytes() ([]byte, error) {
-	return json.Marshal(tx)
 }

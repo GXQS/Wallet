@@ -22,11 +22,11 @@ func TestBuildTransfer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Build: %v", err)
 	}
-	if tx.Hash == "" {
-		t.Fatal("expected non-empty hash")
+	if tx.ID().Hex() == "" {
+		t.Fatal("expected non-empty tx id")
 	}
-	if tx.Type != txbuilder.TxTypeTransfer {
-		t.Fatalf("expected type %q, got %q", txbuilder.TxTypeTransfer, tx.Type)
+	if tx.Value != 1_000_000 {
+		t.Fatalf("expected value 1000000, got %d", tx.Value)
 	}
 }
 
@@ -54,7 +54,7 @@ func TestBuildMissingTo(t *testing.T) {
 	}
 }
 
-func TestTxBytes(t *testing.T) {
+func TestSigningPayload(t *testing.T) {
 	tx, err := txbuilder.New(txbuilder.TxTypeStake).
 		From(testFrom).
 		To(testTo).
@@ -65,11 +65,8 @@ func TestTxBytes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Build: %v", err)
 	}
-	b, err := tx.Bytes()
-	if err != nil {
-		t.Fatalf("Bytes: %v", err)
-	}
+	b := tx.SigningPayload()
 	if len(b) == 0 {
-		t.Fatal("expected non-empty serialised transaction")
+		t.Fatal("expected non-empty signing payload")
 	}
 }
