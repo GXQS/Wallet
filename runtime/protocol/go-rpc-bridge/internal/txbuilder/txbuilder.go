@@ -36,6 +36,8 @@ type Transaction struct {
 	Signature string    `json:"signature,omitempty"`
 	Hash      string    `json:"hash,omitempty"`
 
+	// core stores the canonical Core transaction used for signing payload and ID
+	// calculations while the exported fields preserve walletd's HTTP JSON schema.
 	core coretypes.Transaction `json:"-"`
 }
 
@@ -152,6 +154,7 @@ func (tx *Transaction) SigningPayload() []byte {
 	if tx == nil {
 		return nil
 	}
+	// Return a defensive copy so callers cannot mutate our internal Core payload.
 	payload := tx.core.SigningPayload()
 	out := make([]byte, len(payload))
 	copy(out, payload)
