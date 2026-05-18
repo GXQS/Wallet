@@ -1,18 +1,17 @@
-// Package txbuilder constructs and serialises GXQS transactions.
-// Transaction construction MUST originate from GXQS/core-compatible protocol
-// primitives; this package acts as the canonical bridge implementation.
+// Package txbuilder constructs GXQS transactions backed by Core protocol types.
 package txbuilder
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
+
+	coretypes "github.com/gxqs/core/types"
+	"github.com/gxqs/wallet/runtime/protocol/go-rpc-bridge/internal/address"
 )
 
-// TxType classifies a GXQS transaction.
+// TxType classifies a GXQS transaction request shape.
 type TxType string
 
 const (
@@ -23,7 +22,7 @@ const (
 	TxTypeDeploy    TxType = "deploy"
 )
 
-// Transaction represents a fully-formed GXQS protocol transaction.
+// Transaction is the HTTP RPC transaction representation.
 type Transaction struct {
 	Version   uint32    `json:"version"`
 	Type      TxType    `json:"type"`
@@ -36,9 +35,13 @@ type Transaction struct {
 	Timestamp time.Time `json:"timestamp"`
 	Signature string    `json:"signature,omitempty"`
 	Hash      string    `json:"hash,omitempty"`
+
+	// core stores the canonical Core transaction used for signing payload and ID
+	// calculations while the exported fields preserve walletd's HTTP JSON schema.
+	core coretypes.Transaction `json:"-"`
 }
 
-// Builder provides a fluent API for constructing GXQS transactions.
+// Builder provides a fluent API for constructing Core-backed transactions.
 type Builder struct {
 	tx  Transaction
 	err error
@@ -46,10 +49,20 @@ type Builder struct {
 
 // New creates a new Builder for the given transaction type.
 func New(txType TxType) *Builder {
+	if !isSupportedTxType(txType) {
+		return &Builder{err: fmt.Errorf("unsupported transaction type: %q", txType)}
+	}
+	// Keep DTO and Core timestamps aligned to the same UTC instant.
+	now := time.Now().UTC()
 	return &Builder{tx: Transaction{
 		Version:   1,
 		Type:      txType,
-		Timestamp: time.Now().UTC(),
+		Timestamp: now,
+		core: coretypes.Transaction{
+			ChainID:   1,
+			Timestamp: now.UnixMilli(),
+			GasLimit:  gasLimitForType(txType),
+		},
 	}}
 }
 
@@ -71,31 +84,35 @@ func (b *Builder) To(addr string) *Builder {
 	return b
 }
 
-// Amount sets the transfer amount in the smallest denomination (aGXQS).
+// Amount sets the transfer amount in the smallest denomination.
 func (b *Builder) Amount(a uint64) *Builder {
 	b.tx.Amount = a
+	b.tx.core.Value = a
 	return b
 }
 
-// Fee sets the transaction fee.
+// Fee sets the transaction gas price.
 func (b *Builder) Fee(f uint64) *Builder {
 	b.tx.Fee = f
+	b.tx.core.GasPrice = f
 	return b
 }
 
 // Nonce sets the sender nonce.
 func (b *Builder) Nonce(n uint64) *Builder {
 	b.tx.Nonce = n
+	b.tx.core.Nonce = n
 	return b
 }
 
 // Data attaches arbitrary payload data (e.g. contract call data).
 func (b *Builder) Data(d []byte) *Builder {
 	b.tx.Data = d
+	b.tx.core.Data = d
 	return b
 }
 
-// Build finalises the transaction, computes its hash, and returns it.
+// Build finalises the transaction and returns the HTTP transaction DTO.
 func (b *Builder) Build() (*Transaction, error) {
 	if b.err != nil {
 		return nil, b.err
@@ -107,32 +124,18 @@ func (b *Builder) Build() (*Transaction, error) {
 		return nil, errors.New("to address is required")
 	}
 
-	raw, err := json.Marshal(struct {
-		Version   uint32 `json:"version"`
-		Type      TxType `json:"type"`
-		From      string `json:"from"`
-		To        string `json:"to"`
-		Amount    uint64 `json:"amount"`
-		Fee       uint64 `json:"fee"`
-		Nonce     uint64 `json:"nonce"`
-		Timestamp string `json:"timestamp"`
-	}{
-		Version:   b.tx.Version,
-		Type:      b.tx.Type,
-		From:      b.tx.From,
-		To:        b.tx.To,
-		Amount:    b.tx.Amount,
-		Fee:       b.tx.Fee,
-		Nonce:     b.tx.Nonce,
-		Timestamp: b.tx.Timestamp.Format(time.RFC3339Nano),
-	})
+	fromAddr, err := address.Parse(b.tx.From)
 	if err != nil {
-		return nil, fmt.Errorf("marshal tx: %w", err)
+		return nil, fmt.Errorf("invalid from address: %w", err)
+	}
+	toAddr, err := address.Parse(b.tx.To)
+	if err != nil {
+		return nil, fmt.Errorf("invalid to address: %w", err)
 	}
 
-	h := sha256.Sum256(raw)
-	b.tx.Hash = hex.EncodeToString(h[:])
-
+	b.tx.core.From = coretypes.AddressFromBytes(fromAddr[:])
+	b.tx.core.To = coretypes.AddressFromBytes(toAddr[:])
+	b.tx.Hash = b.tx.core.ID().Hex()
 	tx := b.tx
 	return &tx, nil
 }
@@ -140,4 +143,37 @@ func (b *Builder) Build() (*Transaction, error) {
 // Bytes serialises the transaction to canonical JSON.
 func (tx *Transaction) Bytes() ([]byte, error) {
 	return json.Marshal(tx)
+}
+
+// ID returns the underlying Core transaction identifier.
+func (tx *Transaction) ID() coretypes.TxID {
+	return tx.core.ID()
+}
+
+// SigningPayload returns the underlying Core signing payload.
+func (tx *Transaction) SigningPayload() []byte {
+	if tx == nil {
+		return nil
+	}
+	return tx.core.SigningPayload()
+}
+
+func isSupportedTxType(txType TxType) bool {
+	switch txType {
+	case TxTypeTransfer, TxTypeStake, TxTypeUnstake, TxTypeValidator, TxTypeDeploy:
+		return true
+	default:
+		return false
+	}
+}
+
+func gasLimitForType(txType TxType) uint64 {
+	switch txType {
+	case TxTypeDeploy:
+		return 2_000_000
+	case TxTypeStake, TxTypeUnstake, TxTypeValidator:
+		return 120_000
+	default:
+		return 21_000
+	}
 }

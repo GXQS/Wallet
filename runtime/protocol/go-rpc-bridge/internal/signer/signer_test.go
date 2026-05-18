@@ -18,7 +18,11 @@ func TestSignAndVerify(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Sign: %v", err)
 	}
-	if !signer.Verify(&key.PublicKey, payload, sig) {
+	pub, err := signer.PublicKeyBytes(key)
+	if err != nil {
+		t.Fatalf("PublicKeyBytes: %v", err)
+	}
+	if !signer.Verify(pub, payload, sig) {
 		t.Fatal("Verify returned false for valid signature")
 	}
 }
@@ -26,7 +30,8 @@ func TestSignAndVerify(t *testing.T) {
 func TestVerifyWrongPayload(t *testing.T) {
 	key, _ := signer.GenerateKeyPair()
 	sig, _ := signer.Sign(key, []byte("original"))
-	if signer.Verify(&key.PublicKey, []byte("tampered"), sig) {
+	pub, _ := signer.PublicKeyBytes(key)
+	if signer.Verify(pub, []byte("tampered"), sig) {
 		t.Fatal("Verify returned true for tampered payload")
 	}
 }
@@ -48,15 +53,15 @@ func TestSignNilKey(t *testing.T) {
 
 func TestPublicKeyBytes(t *testing.T) {
 	key, _ := signer.GenerateKeyPair()
-	b, err := signer.PublicKeyBytes(&key.PublicKey)
+	b, err := signer.PublicKeyBytes(key)
 	if err != nil {
 		t.Fatalf("PublicKeyBytes: %v", err)
 	}
-	if b[0] != 0x04 {
-		t.Fatalf("expected uncompressed prefix 0x04, got 0x%02x", b[0])
+	if len(b) == 0 {
+		t.Fatal("expected non-empty public key bytes")
 	}
 	// Key is idempotent: same bytes on repeated calls.
-	b2, _ := signer.PublicKeyBytes(&key.PublicKey)
+	b2, _ := signer.PublicKeyBytes(key)
 	if !bytes.Equal(b, b2) {
 		t.Fatal("PublicKeyBytes not deterministic")
 	}

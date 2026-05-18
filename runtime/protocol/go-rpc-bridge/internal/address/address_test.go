@@ -39,6 +39,20 @@ func TestAddressString(t *testing.T) {
 	}
 }
 
+func TestParseAddress(t *testing.T) {
+	addr, err := address.FromPublicKey(testPubKey)
+	if err != nil {
+		t.Fatalf("FromPublicKey: %v", err)
+	}
+	parsed, err := address.Parse(addr.String())
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if parsed != addr {
+		t.Fatalf("expected parsed address %v, got %v", addr, parsed)
+	}
+}
+
 func TestValidateInvalid(t *testing.T) {
 	cases := []string{
 		"",
