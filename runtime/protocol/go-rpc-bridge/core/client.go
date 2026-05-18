@@ -9,7 +9,6 @@ import (
 
 	gxqsservices "github.com/gxqs/wallet/runtime/protocol/go-rpc-bridge/internal/corepb/services"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Client wraps the Core WalletService gRPC client and underlying connection.
@@ -20,12 +19,12 @@ type Client struct {
 
 // Dial establishes a gRPC connection and returns a WalletService client wrapper.
 func Dial(ctx context.Context, endpoint string, opts ...grpc.DialOption) (*Client, error) {
-	target := normalizeTarget(endpoint)
-	if target == "" {
-		return nil, fmt.Errorf("core grpc endpoint is required")
+	target, err := normalizeTarget(endpoint)
+	if err != nil {
+		return nil, err
 	}
 	if len(opts) == 0 {
-		opts = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+		return nil, fmt.Errorf("core grpc dial requires explicit transport credentials")
 	}
 	conn, err := grpc.DialContext(ctx, target, opts...)
 	if err != nil {
@@ -53,15 +52,22 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func normalizeTarget(endpoint string) string {
+func normalizeTarget(endpoint string) (string, error) {
 	trimmed := strings.TrimSpace(endpoint)
 	if trimmed == "" {
-		return ""
+		return "", fmt.Errorf("core grpc endpoint is required")
 	}
-	if strings.HasPrefix(trimmed, "http://") || strings.HasPrefix(trimmed, "https://") {
-		if u, err := url.Parse(trimmed); err == nil && u.Host != "" {
-			return u.Host
+	if strings.Contains(trimmed, "://") {
+		u, err := url.Parse(trimmed)
+		if err != nil {
+			return "", fmt.Errorf("invalid core grpc endpoint %q: %w", trimmed, err)
+		}
+		if u.Scheme == "http" || u.Scheme == "https" {
+			return "", fmt.Errorf("http(s) URLs are not valid gRPC targets; use host:port or canonical gRPC target")
+		}
+		if u.Scheme == "" {
+			return "", fmt.Errorf("invalid core grpc target %q", trimmed)
 		}
 	}
-	return trimmed
+	return trimmed, nil
 }

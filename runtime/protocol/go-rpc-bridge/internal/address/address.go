@@ -66,20 +66,29 @@ func (a Address) Format(hrp string) string {
 
 // Validate checks that a string is a well-formed GXQS address.
 func Validate(s string) error {
+	_, err := Parse(s)
+	return err
+}
+
+// Parse validates and decodes a GXQS address string into raw bytes.
+func Parse(s string) (Address, error) {
 	if s == "" {
-		return ErrInvalidAddress
+		return Address{}, ErrInvalidAddress
 	}
 	for _, prefix := range []string{MainnetPrefix + "1", TestnetPrefix + "1"} {
 		if strings.HasPrefix(s, prefix) {
 			rest := s[len(prefix):]
 			if len(rest) != AddressLength*2 {
-				return fmt.Errorf("%w: incorrect length", ErrInvalidAddress)
+				return Address{}, fmt.Errorf("%w: incorrect length", ErrInvalidAddress)
 			}
-			if _, err := hex.DecodeString(rest); err != nil {
-				return fmt.Errorf("%w: invalid hex encoding", ErrInvalidAddress)
+			raw, err := hex.DecodeString(rest)
+			if err != nil {
+				return Address{}, fmt.Errorf("%w: invalid hex encoding", ErrInvalidAddress)
 			}
-			return nil
+			var out Address
+			copy(out[:], raw)
+			return out, nil
 		}
 	}
-	return fmt.Errorf("%w: unrecognised prefix", ErrInvalidAddress)
+	return Address{}, fmt.Errorf("%w: unrecognised prefix", ErrInvalidAddress)
 }
