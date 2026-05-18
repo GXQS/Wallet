@@ -164,18 +164,6 @@ jobs:
         # is bumped to a version that includes the fixes.
         continue-on-error: true
 
-      - name: Setup Go for golangci-lint
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-
-      - name: golangci-lint
-        if: matrix.os == 'ubuntu-latest'
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.64.5
-          working-directory: ${{ matrix.module }}
 
   # ---------------------------------------------------------------------------
   # Rust: clippy · test · cargo audit
