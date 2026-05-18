@@ -98,6 +98,19 @@ func TestInvalidAddress(t *testing.T) {
 	}
 }
 
+func TestInvalidAddressLength(t *testing.T) {
+	_, err := txbuilder.New(txbuilder.TxTypeTransfer).
+		From("gxqs1aabbccddeeff00112233445566778899aabb").
+		To(testTo).
+		Amount(1).
+		Fee(1).
+		Nonce(1).
+		Build()
+	if err == nil {
+		t.Fatal("expected error for short from address length")
+	}
+}
+
 func TestTypeAffectsBuiltCoreTransaction(t *testing.T) {
 	transferTx, err := txbuilder.New(txbuilder.TxTypeTransfer).
 		From(testFrom).
@@ -151,5 +164,36 @@ func TestJSONContractCompatibility(t *testing.T) {
 	}
 	if out["to"] != testTo {
 		t.Fatalf("expected to=%q, got %#v", testTo, out["to"])
+	}
+}
+
+func TestBytesMatchesJSONEncoding(t *testing.T) {
+	tx, err := txbuilder.New(txbuilder.TxTypeTransfer).
+		From(testFrom).
+		To(testTo).
+		Amount(7).
+		Fee(1).
+		Nonce(2).
+		Build()
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	got, err := tx.Bytes()
+	if err != nil {
+		t.Fatalf("Bytes: %v", err)
+	}
+	want, err := json.Marshal(tx)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+	if string(got) != string(want) {
+		t.Fatalf("Bytes mismatch: got %s want %s", got, want)
+	}
+}
+
+func TestNilTransactionSigningPayload(t *testing.T) {
+	var tx *txbuilder.Transaction
+	if payload := tx.SigningPayload(); payload != nil {
+		t.Fatalf("expected nil payload for nil tx, got %x", payload)
 	}
 }
