@@ -170,6 +170,7 @@ jobs:
         with:
           version: v1.64.5
           working-directory: ${{ matrix.module }}
+          go-version: '1.24'   # ← ADD THIS LINE
 
   # ---------------------------------------------------------------------------
   # Rust: clippy · test · cargo audit
