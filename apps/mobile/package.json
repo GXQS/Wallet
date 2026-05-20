@@ -13,7 +13,7 @@
     "test": "echo 'no tests'"
   },
   "dependencies": {
-    "@expo/vector-icons": "^14.0.0",
+    "@expo/vector-icons": "^15.1.1",
     "@gxqs/sdk": "workspace:*",
     "expo": "~52.0.0",
     "expo-router": "~4.0.0",
