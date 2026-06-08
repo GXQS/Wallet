@@ -17,7 +17,7 @@
     "@gxqs/ui": "workspace:*",
     "clsx": "^2.1.1",
     "framer-motion": "^11.18.2",
-    "next": "16.2.6",
+    "next": "16.2.7",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "tailwind-merge": "^3.3.0",
